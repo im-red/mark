@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <!-- Background -->
+  <rect width="1024" height="1024" rx="200" fill="#3880ff"/>
+  
+  <!-- Calendar Body -->
+  <rect x="180" y="280" width="664" height="520" rx="60" fill="#ffffff"/>
+  
+  <!-- Calendar Header -->
+  <rect x="180" y="280" width="664" height="120" rx="60" fill="#f4f5f8"/>
+  <rect x="180" y="340" width="664" height="60" fill="#f4f5f8"/>
+  
+  <!-- Calendar Rings -->
+  <rect x="300" y="240" width="40" height="80" rx="20" fill="#3880ff"/>
+  <rect x="684" y="240" width="40" height="80" rx="20" fill="#3880ff"/>
+  
+  <!-- Calendar Grid Lines -->
+  <line x1="180" y1="460" x2="844" y2="460" stroke="#e0e0e0" stroke-width="4"/>
+  <line x1="180" y1="560" x2="844" y2="560" stroke="#e0e0e0" stroke-width="4"/>
+  <line x1="180" y1="660" x2="844" y2="660" stroke="#e0e0e0" stroke-width="4"/>
+  
+  <line x1="312" y1="400" x2="312" y2="800" stroke="#e0e0e0" stroke-width="4"/>
+  <line x1="444" y1="400" x2="444" y2="800" stroke="#e0e0e0" stroke-width="4"/>
+  <line x1="576" y1="400" x2="576" y2="800" stroke="#e0e0e0" stroke-width="4"/>
+  <line x1="708" y1="400" x2="708" y2="800" stroke="#e0e0e0" stroke-width="4"/>
+  
+  <!-- Checkmark Circle -->
+  <circle cx="640" cy="610" r="100" fill="#4CAF50"/>
+  
+  <!-- Checkmark -->
+  <path d="M590 610 L620 650 L690 580" stroke="#ffffff" stroke-width="24" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
