@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { App as CapacitorApp } from '@capacitor/app';
 import { Capacitor } from '@capacitor/core';
+import { SplashScreen } from '@capacitor/splash-screen';
 import { BoardProvider, useBoard } from './context/BoardContext';
 import { MarkSuiteProvider } from './context/MarkSuiteContext';
 import HomePage from './components/HomePage';
@@ -31,6 +32,18 @@ const AppContent: React.FC = () => {
   const showImportOverlayRef = useRef(false);
   // Ref for child components to register overlay close handlers
   const overlayCloseRef = useRef<(() => boolean) | null>(null);
+
+  useEffect(() => {
+    // Hide splash screen once the app component is mounted and idioms are available
+    const hideSplash = async () => {
+      try {
+        await SplashScreen.hide();
+      } catch (err) {
+        console.warn('Error hiding splash screen', err);
+      }
+    };
+    hideSplash();
+  }, []);
 
   // Keep refs in sync with state
   useEffect(() => { currentPageRef.current = currentPage; }, [currentPage]);
