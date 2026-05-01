@@ -1,4 +1,4 @@
-import { MarkSuite, AppState, createDefaultMarkSuites } from '../types';
+import { MarkSuite, AppState, createDefaultMarkSuites } from '../models';
 
 export function syncBuiltInSuites(storedState: AppState): AppState {
   const defaultSuites = createDefaultMarkSuites();

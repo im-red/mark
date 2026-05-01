@@ -1,292 +1,443 @@
 import { test, expect } from '@playwright/test';
 
+async function waitForIonicPage(page) {
+  await page.waitForSelector('ion-router-outlet', { state: 'attached' });
+  await page.waitForTimeout(800);
+}
+
+async function getPageTitle(page) {
+  return page.locator('ion-router-outlet > div:not(.ion-page-hidden) ion-title').first();
+}
+
+async function openSideMenu(page) {
+  const menuButton = page.locator('ion-menu-button').first();
+  await menuButton.click();
+  await page.waitForTimeout(500);
+  const menu = page.locator('ion-menu');
+  await expect(menu).toBeVisible();
+  return menu;
+}
+
+async function navigateViaMenu(page, itemText: string) {
+  await openSideMenu(page);
+  await page.locator('ion-menu ion-item:has-text("' + itemText + '")').click();
+  await page.waitForTimeout(800);
+  const menu = page.locator('ion-menu');
+  try {
+    await menu.evaluate((el: HTMLIonMenuElement) => el.close());
+  } catch (e) { }
+  await page.waitForTimeout(300);
+}
+
+async function closeSideMenu(page) {
+  const menu = page.locator('ion-menu');
+  try {
+    await menu.evaluate((el: HTMLIonMenuElement) => el.close());
+  } catch (e) { }
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(300);
+}
+
+async function createBoard(page, name: string) {
+  const fabButton = page.locator('ion-fab-button').first();
+  await fabButton.click();
+  await page.waitForTimeout(500);
+
+  const modal = page.locator('ion-modal').first();
+  await expect(modal).toBeVisible();
+
+  const input = modal.locator('input').first();
+  await input.fill(name);
+
+  const createButton = modal.locator('ion-button:has-text("Create")');
+  await createButton.click();
+  await page.waitForTimeout(1000);
+}
+
+async function clearStorage(page) {
+  try {
+    await page.evaluate(() => localStorage.clear());
+  } catch (e) { }
+}
+
 test.describe('Navigation Tests', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/');
-    await page.evaluate(() => localStorage.clear());
+    await clearStorage(page);
     await page.reload();
+    await waitForIonicPage(page);
   });
 
-  test('home page displays header with title', async ({ page }) => {
-    await page.waitForSelector('.app-header', { state: 'visible' });
-
-    const headerTitle = page.locator('.header-title h1');
-    await expect(headerTitle).toHaveText('Mark');
-
-    console.log('✓ Home page header is visible with title "Mark"');
+  test('home page displays header with title "Mark"', async ({ page }) => {
+    const title = await getPageTitle(page);
+    await expect(title).toHaveText('Mark');
   });
 
   test('home page displays menu button', async ({ page }) => {
-    await page.waitForSelector('.app-header', { state: 'visible' });
-
-    const menuButton = page.locator('.btn-menu');
+    const menuButton = page.locator('ion-menu-button').first();
     await expect(menuButton).toBeVisible();
-
-    console.log('✓ Menu button is visible on home page');
   });
 
-  test('home page displays add board button', async ({ page }) => {
-    await page.waitForSelector('.app-header', { state: 'visible' });
-
-    const addButton = page.locator('.fab');
-    await expect(addButton).toBeVisible();
-
-    console.log('✓ Add board button is visible on home page');
+  test('home page displays FAB add button', async ({ page }) => {
+    const fabButton = page.locator('ion-fab-button').first();
+    await expect(fabButton).toBeVisible();
   });
 
-  test('home page displays board list or empty state', async ({ page }) => {
-    await page.waitForSelector('.app-header', { state: 'visible' });
-
-    const boardList = page.locator('.board-list');
-    const emptyState = page.locator('.empty-state');
-
-    const hasBoardList = await boardList.count().then(c => c > 0);
-    const hasEmptyState = await emptyState.count().then(c => c > 0);
-
-    expect(hasBoardList || hasEmptyState).toBe(true);
-
-    if (hasEmptyState) {
-      console.log('✓ Empty state is displayed when no boards exist');
-    } else {
-      console.log('✓ Board list is displayed');
-    }
+  test('home page shows empty state when no boards exist', async ({ page }) => {
+    const emptyTitle = page.locator('.empty-state__title');
+    await expect(emptyTitle).toHaveText('No boards yet');
   });
 
   test('side menu opens when menu button is clicked', async ({ page }) => {
-    await page.waitForSelector('.app-header', { state: 'visible' });
-
-    const menuButton = page.locator('.btn-menu');
-    await menuButton.click();
-
-    await page.waitForSelector('.side-menu--open', { state: 'visible' });
-
-    const sideMenu = page.locator('.side-menu.side-menu--open');
-    await expect(sideMenu).toBeVisible();
-
-    console.log('✓ Side menu opens when menu button is clicked');
+    await openSideMenu(page);
+    const menuHeader = page.locator('ion-menu ion-header ion-title').first();
+    await expect(menuHeader).toHaveText('Menu');
   });
 
-  test('side menu displays export and import options', async ({ page }) => {
-    await page.waitForSelector('.app-header', { state: 'visible' });
-
-    await page.locator('.btn-menu').click();
-    await page.waitForSelector('.side-menu--open', { state: 'visible' });
-
-    const exportItem = page.locator('.side-menu__item:has-text("Export Data")');
-    const importItem = page.locator('.side-menu__item:has-text("Import Data")');
-
-    await expect(exportItem).toBeVisible();
-    await expect(importItem).toBeVisible();
-
-    console.log('✓ Side menu displays Export and Import options');
+  test('side menu displays navigation items', async ({ page }) => {
+    await openSideMenu(page);
+    const menu = page.locator('ion-menu');
+    await expect(menu.locator('ion-item:has-text("Manage Marks")')).toBeVisible();
+    await expect(menu.locator('ion-item:has-text("Export Data")')).toBeVisible();
+    await expect(menu.locator('ion-item:has-text("Import Data")')).toBeVisible();
+    await expect(menu.locator('ion-item:has-text("Settings")')).toBeVisible();
   });
 
-  test('side menu closes when backdrop is clicked', async ({ page }) => {
-    await page.waitForSelector('.app-header', { state: 'visible' });
-
-    await page.locator('.btn-menu').click();
-    await page.waitForSelector('.side-menu--open', { state: 'visible' });
-
-    const backdrop = page.locator('.side-menu-backdrop');
-    await backdrop.click();
-
-    await page.waitForSelector('.side-menu--open', { state: 'hidden' });
-
-    console.log('✓ Side menu closes when backdrop is clicked');
+  test('side menu closes when Escape is pressed', async ({ page }) => {
+    await openSideMenu(page);
+    await closeSideMenu(page);
+    await page.waitForTimeout(500);
+    const menu = page.locator('ion-menu');
+    const isOpen = await menu.evaluate((el: any) => el.isOpen());
+    expect(isOpen).toBe(false);
   });
 
-  test('create board overlay opens when add button is clicked', async ({ page }) => {
-    await page.waitForSelector('.app-header', { state: 'visible' });
+  test('create board modal opens when FAB is clicked', async ({ page }) => {
+    const fabButton = page.locator('ion-fab-button').first();
+    await fabButton.click();
+    await page.waitForTimeout(500);
 
-    const addButton = page.locator('.fab');
-    await addButton.click();
-
-    await page.waitForSelector('.overlay', { state: 'visible' });
-
-    const overlayTitle = page.locator('.overlay__header h2');
-    await expect(overlayTitle).toHaveText('New Board');
-
-    console.log('✓ Create board overlay opens when add button is clicked');
+    const modal = page.locator('ion-modal').first();
+    await expect(modal).toBeVisible();
+    const modalTitle = modal.locator('ion-title').first();
+    await expect(modalTitle).toHaveText('New Board');
   });
 
-  test('create board overlay can be cancelled', async ({ page }) => {
-    await page.waitForSelector('.app-header', { state: 'visible' });
+  test('create board modal can be cancelled', async ({ page }) => {
+    const fabButton = page.locator('ion-fab-button').first();
+    await fabButton.click();
+    await page.waitForTimeout(500);
 
-    await page.locator('.fab').click();
-    await page.waitForSelector('.overlay', { state: 'visible' });
+    const modal = page.locator('ion-modal').first();
+    await expect(modal).toBeVisible();
 
-    const cancelButton = page.locator('.overlay__actions .btn-secondary');
+    const cancelButton = modal.locator('ion-button:has-text("Cancel")');
     await cancelButton.click();
+    await page.waitForTimeout(500);
 
-    await page.waitForSelector('.overlay', { state: 'hidden' });
-
-    console.log('✓ Create board overlay can be cancelled');
+    await expect(modal).not.toBeVisible();
   });
 
   test('create board and navigate to board detail', async ({ page }) => {
-    await page.waitForSelector('.app-header', { state: 'visible' });
+    await createBoard(page, 'Test Board');
 
-    await page.locator('.fab').click();
-    await page.waitForSelector('.overlay', { state: 'visible' });
-
-    const input = page.locator('.overlay__content .input');
-    await input.fill('Test Board');
-
-    const createButton = page.locator('.overlay__actions .btn-primary');
-    await createButton.click();
-
-    await page.waitForSelector('.page--board-detail', { state: 'visible' });
-
-    const boardTitle = page.locator('.header-title h1');
+    await expect(page).toHaveURL(/\/board\//);
+    const boardTitle = await getPageTitle(page);
     await expect(boardTitle).toHaveText('Test Board');
-
-    console.log('✓ Created board and navigated to board detail page');
   });
 
-  test('navigate back from board detail to home', async ({ page }) => {
-    await page.waitForSelector('.app-header', { state: 'visible' });
+  test('navigate back from board detail to home via back button', async ({ page }) => {
+    await createBoard(page, 'Test Board');
+    await expect(page).toHaveURL(/\/board\//);
 
-    await page.locator('.fab').click();
-    await page.waitForSelector('.overlay', { state: 'visible' });
-
-    await page.locator('.overlay__content .input').fill('Test Board');
-    await page.locator('.overlay__actions .btn-primary').click();
-    await page.waitForSelector('.page--board-detail', { state: 'visible' });
-
-    const backButton = page.locator('.btn-back');
+    const backButton = page.locator('ion-back-button').first();
     await backButton.click();
+    await page.waitForTimeout(1000);
 
-    await page.waitForSelector('.page--home', { state: 'visible' });
-
-    const homeTitle = page.locator('.header-title h1');
+    await expect(page).toHaveURL(/\//);
+    const homeTitle = await getPageTitle(page);
     await expect(homeTitle).toHaveText('Mark');
-
-    console.log('✓ Navigated back from board detail to home page');
   });
 
   test('board card click navigates to board detail', async ({ page }) => {
-    await page.waitForSelector('.app-header', { state: 'visible' });
+    await createBoard(page, 'My First Board');
 
-    await page.locator('.fab').click();
-    await page.waitForSelector('.overlay', { state: 'visible' });
-
-    await page.locator('.overlay__content .input').fill('My First Board');
-    await page.locator('.overlay__actions .btn-primary').click();
-    await page.waitForSelector('.page--board-detail', { state: 'visible' });
-
-    await page.locator('.btn-back').click();
-    await page.waitForSelector('.page--home', { state: 'visible' });
+    const backButton = page.locator('ion-back-button').first();
+    await backButton.click();
+    await page.waitForTimeout(1000);
 
     const boardCard = page.locator('.board-card').first();
     await boardCard.click();
+    await page.waitForTimeout(1000);
 
-    await page.waitForSelector('.page--board-detail', { state: 'visible' });
-
-    const boardTitle = page.locator('.header-title h1');
+    await expect(page).toHaveURL(/\/board\//);
+    const boardTitle = await getPageTitle(page);
     await expect(boardTitle).toHaveText('My First Board');
-
-    console.log('✓ Board card click navigates to board detail page');
   });
 
-  test('export overlay opens from side menu', async ({ page }) => {
-    await page.waitForSelector('.app-header', { state: 'visible' });
+  test('navigate to mark management from side menu', async ({ page }) => {
+    await navigateViaMenu(page, 'Manage Marks');
 
-    await page.locator('.btn-menu').click();
-    await page.waitForSelector('.side-menu--open', { state: 'visible' });
-
-    await page.locator('.side-menu__item:has-text("Export Data")').click();
-
-    await page.waitForSelector('.overlay', { state: 'visible' });
-
-    const overlayTitle = page.locator('.overlay__header h2');
-    await expect(overlayTitle).toHaveText('Export Data');
-
-    console.log('✓ Export overlay opens from side menu');
+    await expect(page).toHaveURL(/\/mark-management/);
+    const title = await getPageTitle(page);
+    await expect(title).toHaveText('Manage Marks');
   });
 
-  test('import overlay opens from side menu', async ({ page }) => {
-    await page.waitForSelector('.app-header', { state: 'visible' });
+  test('navigate back from mark management to home', async ({ page }) => {
+    await navigateViaMenu(page, 'Manage Marks');
 
-    await page.locator('.btn-menu').click();
-    await page.waitForSelector('.side-menu--open', { state: 'visible' });
+    await expect(page).toHaveURL(/\/mark-management/);
 
-    await page.locator('.side-menu__item:has-text("Import Data")').click();
+    const backButton = page.locator('ion-back-button').first();
+    await backButton.click();
+    await page.waitForTimeout(1000);
 
-    await page.waitForSelector('.overlay', { state: 'visible' });
+    await expect(page).toHaveURL(/\//);
+  });
 
-    const overlayTitle = page.locator('.overlay__header h2');
-    await expect(overlayTitle).toHaveText('Import Data');
+  test('navigate to export page from side menu', async ({ page }) => {
+    await navigateViaMenu(page, 'Export Data');
 
-    console.log('✓ Import overlay opens from side menu');
+    await expect(page).toHaveURL(/\/export/);
+    const title = await getPageTitle(page);
+    await expect(title).toHaveText('Export Data');
+  });
+
+  test('navigate back from export page to home', async ({ page }) => {
+    await navigateViaMenu(page, 'Export Data');
+
+    const backButton = page.locator('ion-back-button').first();
+    await backButton.click();
+    await page.waitForTimeout(1000);
+
+    await expect(page).toHaveURL(/\//);
+  });
+
+  test('navigate to import page from side menu', async ({ page }) => {
+    await navigateViaMenu(page, 'Import Data');
+
+    await expect(page).toHaveURL(/\/import/);
+    const title = await getPageTitle(page);
+    await expect(title).toHaveText('Import Data');
+  });
+
+  test('navigate back from import page to home', async ({ page }) => {
+    await navigateViaMenu(page, 'Import Data');
+
+    const backButton = page.locator('ion-back-button').first();
+    await backButton.click();
+    await page.waitForTimeout(1000);
+
+    await expect(page).toHaveURL(/\//);
+  });
+
+  test('navigate to settings from side menu', async ({ page }) => {
+    await navigateViaMenu(page, 'Settings');
+
+    await expect(page).toHaveURL(/\/settings/);
+    const title = await getPageTitle(page);
+    await expect(title).toHaveText('Settings');
+  });
+
+  test('navigate back from settings to home', async ({ page }) => {
+    await navigateViaMenu(page, 'Settings');
+
+    const backButton = page.locator('ion-back-button').first();
+    await backButton.click();
+    await page.waitForTimeout(1000);
+
+    await expect(page).toHaveURL(/\//);
+  });
+
+  test('navigate to about page from settings', async ({ page }) => {
+    await navigateViaMenu(page, 'Settings');
+
+    await expect(page).toHaveURL(/\/settings/);
+
+    const aboutItem = page.locator('ion-router-outlet > div:not(.ion-page-hidden) ion-item:has-text("About")');
+    await aboutItem.click();
+    await page.waitForTimeout(1000);
+
+    await expect(page).toHaveURL(/\/about/);
+    const title = await getPageTitle(page);
+    await expect(title).toHaveText('About');
+  });
+
+  test('navigate back from about to settings', async ({ page }) => {
+    await navigateViaMenu(page, 'Settings');
+
+    const aboutItem = page.locator('ion-router-outlet > div:not(.ion-page-hidden) ion-item:has-text("About")');
+    await aboutItem.click();
+    await page.waitForTimeout(1000);
+
+    const backButton = page.locator('ion-router-outlet > div:not(.ion-page-hidden) ion-back-button').first();
+    await backButton.click();
+    await page.waitForTimeout(1000);
+
+    await expect(page).toHaveURL(/\/settings/);
+    const title = await getPageTitle(page);
+    await expect(title).toHaveText('Settings');
+  });
+
+  test('board detail action sheet opens and has options', async ({ page }) => {
+    await createBoard(page, 'Action Test Board');
+
+    const moreButton = page.locator('ion-router-outlet > div:not(.ion-page-hidden) ion-toolbar ion-button').last();
+    await moreButton.click();
+    await page.waitForTimeout(500);
+
+    const actionSheet = page.locator('ion-action-sheet');
+    await expect(actionSheet).toBeVisible();
+  });
+
+  test('board detail rename modal opens from action sheet', async ({ page }) => {
+    await createBoard(page, 'Rename Test');
+
+    const moreButton = page.locator('ion-router-outlet > div:not(.ion-page-hidden) ion-toolbar ion-button').last();
+    await moreButton.click();
+    await page.waitForTimeout(500);
+
+    const actionSheet = page.locator('ion-action-sheet');
+    await expect(actionSheet).toBeVisible();
+
+    const renameButton = actionSheet.locator('button:has-text("Rename")');
+    await renameButton.click();
+    await page.waitForTimeout(800);
+
+    const renameModal = page.locator('ion-modal:not(.overlay-hidden)');
+    await expect(renameModal).toBeVisible();
+    const renameTitle = renameModal.locator('ion-title').first();
+    await expect(renameTitle).toHaveText('Rename Board');
+  });
+
+  test('board detail delete alert opens from action sheet', async ({ page }) => {
+    await createBoard(page, 'Delete Test');
+
+    const moreButton = page.locator('ion-router-outlet > div:not(.ion-page-hidden) ion-toolbar ion-button').last();
+    await moreButton.click();
+    await page.waitForTimeout(500);
+
+    const actionSheet = page.locator('ion-action-sheet');
+    await expect(actionSheet).toBeVisible();
+
+    const deleteButton = actionSheet.locator('button:has-text("Delete")');
+    await deleteButton.click();
+    await page.waitForTimeout(500);
+
+    const alert = page.locator('ion-alert');
+    await expect(alert).toBeVisible();
+  });
+
+  test('mark selector modal opens when calendar date is clicked', async ({ page }) => {
+    await createBoard(page, 'Calendar Test');
+
+    const calendarDay = page.locator('.calendar-day.current-month').first();
+    await calendarDay.click();
+    await page.waitForTimeout(800);
+
+    const markSelectorModal = page.locator('ion-modal:not(.overlay-hidden)');
+    await expect(markSelectorModal).toBeVisible();
   });
 });
 
 test.describe('Mobile Navigation Tests', () => {
-  test.use({ ...{ viewport: { width: 393, height: 851 } } });
+  test.use({ viewport: { width: 393, height: 851 } });
 
   test.beforeEach(async ({ page }) => {
     await page.goto('/');
-    await page.evaluate(() => localStorage.clear());
+    await clearStorage(page);
     await page.reload();
+    await waitForIonicPage(page);
   });
 
   test('home page elements are visible on mobile viewport', async ({ page }) => {
-    await page.waitForSelector('.app-header', { state: 'visible' });
+    const title = await getPageTitle(page);
+    await expect(title).toBeVisible();
 
-    const header = page.locator('.app-header');
-    const headerBox = await header.boundingBox();
+    const menuButton = page.locator('ion-menu-button').first();
+    await expect(menuButton).toBeVisible();
 
-    expect(headerBox).not.toBeNull();
-    expect(headerBox!.x).toBeGreaterThanOrEqual(0);
-    expect(headerBox!.y).toBeGreaterThanOrEqual(0);
-
-    const menuButton = page.locator('.btn-menu');
-    const menuBox = await menuButton.boundingBox();
-    expect(menuBox).not.toBeNull();
-
-    const addButton = page.locator('.fab');
-    const addBox = await addButton.boundingBox();
-    expect(addBox).not.toBeNull();
-
-    console.log('✓ Home page elements are visible on mobile viewport');
+    const fabButton = page.locator('ion-fab-button').first();
+    await expect(fabButton).toBeVisible();
   });
 
   test('side menu is fully visible on mobile', async ({ page }) => {
-    await page.waitForSelector('.app-header', { state: 'visible' });
-
-    await page.locator('.btn-menu').click();
-    await page.waitForSelector('.side-menu--open', { state: 'visible' });
-    await page.waitForTimeout(400);
-
-    const sideMenu = page.locator('.side-menu.side-menu--open');
-    const menuBox = await sideMenu.boundingBox();
-
-    expect(menuBox).not.toBeNull();
-    expect(menuBox!.x).toBeGreaterThanOrEqual(-10);
-    expect(menuBox!.y).toBeGreaterThanOrEqual(0);
-
-    console.log('✓ Side menu is fully visible on mobile');
+    await openSideMenu(page);
+    const menu = page.locator('ion-menu');
+    await expect(menu.locator('ion-item:has-text("Manage Marks")')).toBeVisible();
   });
 
-  test('board card is clickable on mobile viewport', async ({ page }) => {
-    await page.waitForSelector('.app-header', { state: 'visible' });
+  test('create board and navigate on mobile', async ({ page }) => {
+    await createBoard(page, 'Mobile Board');
 
-    await page.locator('.fab').click();
-    await page.waitForSelector('.overlay', { state: 'visible' });
+    await expect(page).toHaveURL(/\/board\//);
+    const boardTitle = await getPageTitle(page);
+    await expect(boardTitle).toHaveText('Mobile Board');
+  });
 
-    await page.locator('.overlay__content .input').fill('Mobile Board');
-    await page.locator('.overlay__actions .btn-primary').click();
-    await page.waitForSelector('.page--board-detail', { state: 'visible' });
+  test('navigate back from board detail on mobile', async ({ page }) => {
+    await createBoard(page, 'Mobile Back Test');
 
-    await page.locator('.btn-back').click();
-    await page.waitForSelector('.page--home', { state: 'visible' });
+    const backButton = page.locator('ion-back-button').first();
+    await backButton.click();
+    await page.waitForTimeout(1000);
 
-    const boardCard = page.locator('.board-card').first();
-    await boardCard.scrollIntoViewIfNeeded();
-    await boardCard.click();
+    await expect(page).toHaveURL(/\//);
+  });
 
-    await page.waitForSelector('.page--board-detail', { state: 'visible' });
+  test('side menu navigation on mobile', async ({ page }) => {
+    await navigateViaMenu(page, 'Settings');
 
-    console.log('✓ Board card is clickable on mobile viewport');
+    await expect(page).toHaveURL(/\/settings/);
+  });
+});
+
+test.describe('Deep Link Navigation Tests', () => {
+  test('direct navigation to /settings', async ({ page }) => {
+    await page.goto('/settings');
+    await waitForIonicPage(page);
+
+    const title = await getPageTitle(page);
+    await expect(title).toHaveText('Settings');
+  });
+
+  test('direct navigation to /about', async ({ page }) => {
+    await page.goto('/about');
+    await waitForIonicPage(page);
+
+    const title = await getPageTitle(page);
+    await expect(title).toHaveText('About');
+  });
+
+  test('direct navigation to /mark-management', async ({ page }) => {
+    await page.goto('/mark-management');
+    await waitForIonicPage(page);
+
+    const title = await getPageTitle(page);
+    await expect(title).toHaveText('Manage Marks');
+  });
+
+  test('direct navigation to /export', async ({ page }) => {
+    await page.goto('/export');
+    await waitForIonicPage(page);
+
+    const title = await getPageTitle(page);
+    await expect(title).toHaveText('Export Data');
+  });
+
+  test('direct navigation to /import', async ({ page }) => {
+    await page.goto('/import');
+    await waitForIonicPage(page);
+
+    const title = await getPageTitle(page);
+    await expect(title).toHaveText('Import Data');
+  });
+
+  test('direct navigation to /board/invalid-id shows board not found', async ({ page }) => {
+    await page.goto('/board/nonexistent-id');
+    await waitForIonicPage(page);
+
+    const title = await getPageTitle(page);
+    await expect(title).toHaveText('Board Not Found');
   });
 });

@@ -1,8 +1,20 @@
 import React, { useState, useMemo } from 'react';
-import { Mark, RECENT_SUITE_ID } from '../types';
-import { useMarkSuite } from '../context/MarkSuiteContext';
+import {
+  IonModal,
+  IonHeader,
+  IonToolbar,
+  IonTitle,
+  IonButtons,
+  IonButton,
+  IonContent,
+  IonSelect,
+  IonSelectOption,
+} from '@ionic/react';
+import { Mark, RECENT_SUITE_ID } from '../models';
+import { useMarkSuite } from '../data/MarkSuiteContext';
 
 interface MarkSelectorProps {
+  isOpen: boolean;
   selectedMarkId: string | null;
   recentMarkIds: string[];
   onSelect: (markId: string | null) => void;
@@ -10,6 +22,7 @@ interface MarkSelectorProps {
 }
 
 const MarkSelector: React.FC<MarkSelectorProps> = ({
+  isOpen,
   selectedMarkId,
   recentMarkIds,
   onSelect,
@@ -38,94 +51,92 @@ const MarkSelector: React.FC<MarkSelectorProps> = ({
   };
 
   return (
-    <div className="mark-selector-overlay" onClick={onClose}>
-      <div className="mark-selector" onClick={e => e.stopPropagation()}>
-        <div className="mark-selector-header">
-          <h3>Select Mark</h3>
-          <button className="close-btn" onClick={onClose}>×</button>
-        </div>
-
-        <div className="mark-selector-content">
-          <div className="mark-section">
-            <h4>Recent Marks</h4>
-            <div className="mark-grid">
-              {recentSuite.marks.map(mark => {
-                const emojiText = mark.emojis.join('');
-                const isNumericText = /^\d+$/.test(emojiText);
-                return (
-                  <button
-                    key={`recent-${mark.id}`}
-                    className={`mark-btn ${selectedMarkId === mark.id ? 'selected' : ''}`}
-                    style={{ backgroundColor: mark.backgroundColor }}
-                    onClick={() => handleMarkSelect(mark)}
-                    title={mark.name}
-                  >
-                    {isNumericText ? (
-                      <span className="mark-btn__text">{emojiText}</span>
-                    ) : (
-                      emojiText
-                    )}
-                  </button>
-                );
-              })}
-              {recentSuite.marks.length === 0 && (
-                <p className="mark-grid__empty">No recent marks.</p>
-              )}
-            </div>
-          </div>
-
-          <div className="mark-section">
-            <h4>Mark Suites</h4>
-            <div className="suite-selector">
-              <select
-                className="suite-dropdown"
-                value={selectedSuiteId}
-                onChange={e => setSelectedSuiteId(e.target.value)}
-              >
-                {availableSuites.map(suite => (
-                  <option key={suite.id} value={suite.id}>
-                    {suite.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="mark-grid">
-              {currentSuite?.marks.map(mark => {
-                const emojiText = mark.emojis.join('');
-                const isNumericText = /^\d+$/.test(emojiText);
-                return (
-                  <button
-                    key={mark.id}
-                    className={`mark-btn ${selectedMarkId === mark.id ? 'selected' : ''}`}
-                    style={{ backgroundColor: mark.backgroundColor }}
-                    onClick={() => handleMarkSelect(mark)}
-                    title={mark.name}
-                  >
-                    {isNumericText ? (
-                      <span className="mark-btn__text">{emojiText}</span>
-                    ) : (
-                      emojiText
-                    )}
-                  </button>
-                );
-              })}
-              {(!currentSuite || currentSuite.marks.length === 0) && (
-                <p className="mark-grid__empty">No marks in this suite.</p>
-              )}
-            </div>
+    <IonModal isOpen={isOpen} onDidDismiss={onClose} breakpoints={[0, 0.5, 0.75, 1]} initialBreakpoint={0.75}>
+      <IonHeader>
+        <IonToolbar>
+          <IonTitle>Select Mark</IonTitle>
+          <IonButtons slot="end">
+            <IonButton onClick={onClose}>Close</IonButton>
+          </IonButtons>
+        </IonToolbar>
+      </IonHeader>
+      <IonContent className="ion-padding">
+        <div className="mark-section">
+          <h4>Recent Marks</h4>
+          <div className="mark-grid">
+            {recentSuite.marks.map(mark => {
+              const emojiText = mark.emojis.join('');
+              const isNumericText = /^\d+$/.test(emojiText);
+              return (
+                <button
+                  key={`recent-${mark.id}`}
+                  className={`mark-btn ${selectedMarkId === mark.id ? 'selected' : ''}`}
+                  style={{ backgroundColor: mark.backgroundColor }}
+                  onClick={() => handleMarkSelect(mark)}
+                  title={mark.name}
+                >
+                  {isNumericText ? (
+                    <span className="mark-btn__text">{emojiText}</span>
+                  ) : (
+                    emojiText
+                  )}
+                </button>
+              );
+            })}
+            {recentSuite.marks.length === 0 && (
+              <p className="mark-grid__empty">No recent marks.</p>
+            )}
           </div>
         </div>
 
-        <div className="mark-selector-actions">
-          {selectedMarkId && (
-            <button className="clear-btn" onClick={handleClear}>
-              Clear Mark
-            </button>
-          )}
+        <div className="mark-section">
+          <h4>Mark Suites</h4>
+          <IonSelect
+            interface="popover"
+            value={selectedSuiteId}
+            onIonChange={(e) => setSelectedSuiteId(e.detail.value)}
+            className="suite-dropdown"
+          >
+            {availableSuites.map(suite => (
+              <IonSelectOption key={suite.id} value={suite.id}>
+                {suite.name}
+              </IonSelectOption>
+            ))}
+          </IonSelect>
+
+          <div className="mark-grid">
+            {currentSuite?.marks.map(mark => {
+              const emojiText = mark.emojis.join('');
+              const isNumericText = /^\d+$/.test(emojiText);
+              return (
+                <button
+                  key={mark.id}
+                  className={`mark-btn ${selectedMarkId === mark.id ? 'selected' : ''}`}
+                  style={{ backgroundColor: mark.backgroundColor }}
+                  onClick={() => handleMarkSelect(mark)}
+                  title={mark.name}
+                >
+                  {isNumericText ? (
+                    <span className="mark-btn__text">{emojiText}</span>
+                  ) : (
+                    emojiText
+                  )}
+                </button>
+              );
+            })}
+            {(!currentSuite || currentSuite.marks.length === 0) && (
+              <p className="mark-grid__empty">No marks in this suite.</p>
+            )}
+          </div>
         </div>
-      </div>
-    </div>
+
+        {selectedMarkId && (
+          <IonButton expand="block" color="danger" fill="outline" onClick={handleClear}>
+            Clear Mark
+          </IonButton>
+        )}
+      </IonContent>
+    </IonModal>
   );
 };
 

@@ -1,4 +1,4 @@
-import { Board, MarkSuite } from '../types';
+import { Board, MarkSuite } from '../models';
 
 interface ImportData {
   version: string;

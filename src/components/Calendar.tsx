@@ -1,5 +1,7 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
-import { Mark } from '../types';
+import { Mark } from '../models';
+import { IonButton, IonIcon } from '@ionic/react';
+import { chevronBack, chevronForward } from 'ionicons/icons';
 
 type ViewMode = 'month' | 'year';
 
@@ -155,20 +157,20 @@ const Calendar: React.FC<CalendarProps> = ({ markIds, getMarkById, onDateClick, 
   return (
     <div className="calendar">
       <div className="calendar-header">
-        <button className="nav-btn" onClick={goToPrev}>
-          ‹
-        </button>
-        <button className="month-year month-year--clickable" onClick={toggleViewMode}>
+        <IonButton fill="clear" size="small" onClick={goToPrev}>
+          <IonIcon icon={chevronBack} slot="icon-only" />
+        </IonButton>
+        <IonButton fill="clear" className="month-year" onClick={toggleViewMode}>
           {headerTitle}
-        </button>
-        <button className="nav-btn" onClick={goToNext}>
-          ›
-        </button>
+        </IonButton>
+        <IonButton fill="clear" size="small" onClick={goToNext}>
+          <IonIcon icon={chevronForward} slot="icon-only" />
+        </IonButton>
       </div>
 
-      <button className="today-btn" onClick={goToToday}>
+      <IonButton fill="outline" size="small" className="today-btn" onClick={goToToday}>
         Today
-      </button>
+      </IonButton>
 
       {viewMode === 'month' && (
         <>

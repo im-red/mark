@@ -1,26 +1,60 @@
 import { test, expect, Page } from '@playwright/test';
 
+// Helper: Select an option from IonSelect (popover interface)
+async function selectFromIonSelect(page: Page, selectSelector: string, optionText: string) {
+  // Click the IonSelect - need to target the shadow DOM button
+  const select = page.locator(selectSelector).first();
+  await select.click();
+  await page.waitForSelector('ion-popover:not(.overlay-hidden)', { state: 'visible', timeout: 5000 });
+  await page.waitForTimeout(300);
+  await page.locator('ion-popover:not(.overlay-hidden) ion-item').filter({ hasText: optionText }).first().click();
+  await page.waitForTimeout(500);
+}
+
+// Helper: Get all option texts from IonSelect popover
+async function getIonSelectOptions(page: Page, selectSelector: string): Promise<string[]> {
+  const select = page.locator(selectSelector).first();
+  await select.click();
+  await page.waitForSelector('ion-popover:not(.overlay-hidden)', { state: 'visible', timeout: 5000 });
+  await page.waitForTimeout(300);
+  const items = page.locator('ion-popover:not(.overlay-hidden) ion-item');
+  const texts = await items.allTextContents();
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(300);
+  return texts.map(t => t.trim());
+}
+
+// Helper: Navigate to a page via side menu
+async function navigateViaMenu(page: Page, menuItemText: string) {
+  await page.locator('ion-menu-button').first().click();
+  await page.waitForTimeout(500);
+  await page.locator('ion-menu ion-item').filter({ hasText: menuItemText }).first().click();
+  await page.waitForTimeout(500);
+}
+
 async function navigateToBoard(page: Page) {
-  await page.click('.board-card');
+  await page.locator('.board-card').first().click();
   await page.waitForSelector('.calendar');
 }
 
 async function openMarkSelector(page: Page) {
-  await page.click('.calendar-day');
-  await page.waitForSelector('.mark-selector');
+  await page.locator('.calendar-day.current-month').first().click();
+  // Ionic keeps all modals in DOM (overlay-hidden when closed), so target the visible one
+  await page.waitForSelector('ion-modal:not(.overlay-hidden)', { state: 'visible' });
+  await page.waitForSelector('ion-modal:not(.overlay-hidden) .mark-section', { state: 'visible' });
+  await page.waitForTimeout(300);
 }
 
 function getRecentSection(page: Page) {
-  return page.locator('.mark-section', { has: page.getByText('Recent Marks', { exact: true }) });
+  return page.locator('ion-modal:not(.overlay-hidden) .mark-section', { has: page.getByText('Recent Marks', { exact: true }) });
 }
 
 function getSuiteSection(page: Page) {
-  return page.locator('.mark-section', { has: page.getByText('Mark Suites', { exact: true }) });
+  return page.locator('ion-modal:not(.overlay-hidden) .mark-section', { has: page.getByText('Mark Suites', { exact: true }) });
 }
 
 async function applyMarkFromSuite(page: Page, suiteName: string, markIndex: number) {
-  const suiteDropdown = page.locator('.suite-dropdown');
-  await suiteDropdown.selectOption({ label: suiteName });
+  await selectFromIonSelect(page, '.suite-dropdown', suiteName);
   await page.waitForTimeout(300);
   const suiteSection = getSuiteSection(page);
   const markBtn = suiteSection.locator('.mark-btn').nth(markIndex);
@@ -32,12 +66,14 @@ async function ensureBoardExists(page: Page) {
   const boardList = page.locator('.board-list');
   const hasBoards = await boardList.count().then(c => c > 0);
   if (!hasBoards) {
-    await page.locator('.fab').click();
-    await page.waitForSelector('.overlay', { state: 'visible' });
-    await page.locator('.overlay__content .input').fill('Test Board');
-    await page.locator('.overlay__actions .btn-primary').click();
-    await page.waitForSelector('.page--board-detail', { state: 'visible' });
-    await page.locator('.btn-back').click();
+    await page.locator('ion-fab-button').click();
+    await page.waitForSelector('ion-modal:not(.overlay-hidden)', { state: 'visible' });
+    await page.waitForTimeout(300);
+    await page.locator('ion-input input').fill('Test Board');
+    await page.waitForTimeout(200);
+    await page.locator('ion-button').filter({ hasText: /^Create$/ }).click();
+    await page.waitForSelector('.calendar', { state: 'visible' });
+    await page.locator('ion-back-button').click();
     await page.waitForSelector('.board-card', { state: 'visible' });
   }
 }
@@ -46,33 +82,17 @@ test.describe('Mark System Tests', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/');
     await page.waitForLoadState('networkidle');
-    // Ensure a board exists for these tests
-    const boardList = page.locator('.board-list');
-    const hasBoards = await boardList.count().then(c => c > 0);
-    if (!hasBoards) {
-      await page.locator('.fab').click();
-      await page.waitForSelector('.overlay', { state: 'visible' });
-      await page.locator('.overlay__content .input').fill('Test Board');
-      await page.locator('.overlay__actions .btn-primary').click();
-      await page.waitForSelector('.page--board-detail', { state: 'visible' });
-      await page.locator('.btn-back').click(); // go back to home
-      await page.waitForSelector('.board-card', { state: 'visible' });
-    }
+    await ensureBoardExists(page);
   });
 
   test('checkmarks suite exists with check, cross and question marks', async ({ page }) => {
-    await page.click('.board-card');
-    await page.waitForSelector('.calendar');
+    await navigateToBoard(page);
+    await openMarkSelector(page);
 
-    await page.click('.calendar-day');
-    await page.waitForSelector('.mark-selector');
-
-    const suiteDropdown = page.locator('.suite-dropdown');
-    await suiteDropdown.selectOption({ label: 'Checkmarks' });
-
+    await selectFromIonSelect(page, '.suite-dropdown', 'Checkmarks');
     await page.waitForTimeout(300);
 
-    const markButtons = page.locator('.mark-btn');
+    const markButtons = page.locator('ion-modal:not(.overlay-hidden) .mark-btn');
     const count = await markButtons.count();
     expect(count).toBe(3);
 
@@ -90,18 +110,13 @@ test.describe('Mark System Tests', () => {
   });
 
   test('mood suite has 5 marks with background colors', async ({ page }) => {
-    await page.click('.board-card');
-    await page.waitForSelector('.calendar');
+    await navigateToBoard(page);
+    await openMarkSelector(page);
 
-    await page.click('.calendar-day');
-    await page.waitForSelector('.mark-selector');
-
-    const suiteDropdown = page.locator('.suite-dropdown');
-    await suiteDropdown.selectOption({ label: 'Mood' });
-
+    await selectFromIonSelect(page, '.suite-dropdown', 'Mood');
     await page.waitForTimeout(300);
 
-    const markButtons = page.locator('.mark-btn');
+    const markButtons = page.locator('ion-modal:not(.overlay-hidden) .mark-btn');
     const count = await markButtons.count();
     expect(count).toBe(5);
 
@@ -123,18 +138,13 @@ test.describe('Mark System Tests', () => {
   });
 
   test('checkmark has greenish background', async ({ page }) => {
-    await page.click('.board-card');
-    await page.waitForSelector('.calendar');
+    await navigateToBoard(page);
+    await openMarkSelector(page);
 
-    await page.click('.calendar-day');
-    await page.waitForSelector('.mark-selector');
-
-    const suiteDropdown = page.locator('.suite-dropdown');
-    await suiteDropdown.selectOption({ label: 'Checkmarks' });
-
+    await selectFromIonSelect(page, '.suite-dropdown', 'Checkmarks');
     await page.waitForTimeout(300);
 
-    const checkMark = page.locator('.mark-btn').first();
+    const checkMark = page.locator('ion-modal:not(.overlay-hidden) .mark-btn').first();
     const bgColor = await checkMark.evaluate((el) =>
       window.getComputedStyle(el).backgroundColor
     );
@@ -145,18 +155,13 @@ test.describe('Mark System Tests', () => {
   });
 
   test('cross has reddish background', async ({ page }) => {
-    await page.click('.board-card');
-    await page.waitForSelector('.calendar');
+    await navigateToBoard(page);
+    await openMarkSelector(page);
 
-    await page.click('.calendar-day');
-    await page.waitForSelector('.mark-selector');
-
-    const suiteDropdown = page.locator('.suite-dropdown');
-    await suiteDropdown.selectOption({ label: 'Checkmarks' });
-
+    await selectFromIonSelect(page, '.suite-dropdown', 'Checkmarks');
     await page.waitForTimeout(300);
 
-    const crossMark = page.locator('.mark-btn').nth(1);
+    const crossMark = page.locator('ion-modal:not(.overlay-hidden) .mark-btn').nth(1);
     const bgColor = await crossMark.evaluate((el) =>
       window.getComputedStyle(el).backgroundColor
     );
@@ -167,8 +172,7 @@ test.describe('Mark System Tests', () => {
   });
 
   test('applied mark shows background color in calendar', async ({ page }) => {
-    await page.click('.board-card');
-    await page.waitForSelector('.calendar');
+    await navigateToBoard(page);
 
     const today = new Date();
     const dayOfMonth = today.getDate();
@@ -190,13 +194,14 @@ test.describe('Mark System Tests', () => {
 
     if (targetDayIndex >= 0) {
       await calendarDays.nth(targetDayIndex).click();
-      await page.waitForSelector('.mark-selector');
-
-      const suiteDropdown = page.locator('.suite-dropdown');
-      await suiteDropdown.selectOption({ label: 'Checkmarks' });
+      await page.waitForSelector('ion-modal:not(.overlay-hidden)', { state: 'visible' });
+      await page.waitForSelector('ion-modal:not(.overlay-hidden) .mark-section', { state: 'visible' });
       await page.waitForTimeout(300);
 
-      await page.locator('.mark-btn').first().click();
+      await selectFromIonSelect(page, '.suite-dropdown', 'Checkmarks');
+      await page.waitForTimeout(300);
+
+      await page.locator('ion-modal:not(.overlay-hidden) .mark-btn').first().click();
       await page.waitForTimeout(500);
 
       const dayMark = calendarDays.nth(targetDayIndex).locator('.day-mark');
@@ -219,19 +224,15 @@ test.describe('Mark System Tests', () => {
   });
 
   test('suite dropdown shows all built-in suites', async ({ page }) => {
-    await page.click('.board-card');
-    await page.waitForSelector('.calendar');
+    await navigateToBoard(page);
+    await openMarkSelector(page);
 
-    await page.click('.calendar-day');
-    await page.waitForSelector('.mark-selector');
-
-    const suiteDropdown = page.locator('.suite-dropdown');
-    const options = await suiteDropdown.locator('option').allTextContents();
+    const options = await getIonSelectOptions(page, '.suite-dropdown');
     console.log('Available suites:', options);
 
-    expect(options).not.toContain('Recent');
-    expect(options).toContain('Mood');
-    expect(options).toContain('Checkmarks');
+    expect(options.some(o => o.includes('Recent'))).toBeFalsy();
+    expect(options.some(o => o.includes('Mood'))).toBeTruthy();
+    expect(options.some(o => o.includes('Checkmarks'))).toBeTruthy();
   });
 });
 
@@ -239,18 +240,7 @@ test.describe('Mark Management Page Tests', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/');
     await page.waitForLoadState('networkidle');
-    // Ensure a board exists for these tests
-    const boardList = page.locator('.board-list');
-    const hasBoards = await boardList.count().then(c => c > 0);
-    if (!hasBoards) {
-      await page.locator('.fab').click();
-      await page.waitForSelector('.overlay', { state: 'visible' });
-      await page.locator('.overlay__content .input').fill('Test Board');
-      await page.locator('.overlay__actions .btn-primary').click();
-      await page.waitForSelector('.page--board-detail', { state: 'visible' });
-      await page.locator('.btn-back').click(); // go back to home
-      await page.waitForSelector('.board-card', { state: 'visible' });
-    }
+    await ensureBoardExists(page);
   });
 
   test('manage marks page shows built-in suites after clearing storage', async ({ page }) => {
@@ -258,14 +248,10 @@ test.describe('Mark Management Page Tests', () => {
     await page.reload();
     await page.waitForLoadState('networkidle');
 
-    await page.click('.btn-menu');
-    await page.waitForSelector('.side-menu--open');
-    await page.waitForTimeout(400);
+    await navigateViaMenu(page, 'Manage Marks');
+    await page.waitForSelector('.suite-list');
 
-    await page.click('.side-menu__item:has-text("Manage Marks")');
-    await page.waitForSelector('.page--mark-management');
-
-    const suiteItems = page.locator('.suite-item');
+    const suiteItems = page.locator('.suite-list ion-item');
     const count = await suiteItems.count();
     console.log('Number of suites on manage page after clearing storage:', count);
 
@@ -274,39 +260,31 @@ test.describe('Mark Management Page Tests', () => {
 
     expect(count).toBeGreaterThanOrEqual(2);
 
-    await expect(page.locator('.suite-item:has-text("Mood")')).toBeVisible();
-    await expect(page.locator('.suite-item:has-text("Checkmarks")')).toBeVisible();
-    await expect(page.locator('.suite-item:has-text("Recent")')).not.toBeVisible();
+    await expect(suiteItems.filter({ hasText: 'Mood' }).first()).toBeVisible();
+    await expect(suiteItems.filter({ hasText: 'Checkmarks' }).first()).toBeVisible();
+    await expect(suiteItems.filter({ hasText: 'Recent' }).first()).not.toBeVisible();
   });
 
   test('manage marks page shows built-in suites', async ({ page }) => {
-    await page.click('.btn-menu');
-    await page.waitForSelector('.side-menu--open');
-    await page.waitForTimeout(400);
+    await navigateViaMenu(page, 'Manage Marks');
+    await page.waitForSelector('.suite-list');
 
-    await page.click('.side-menu__item:has-text("Manage Marks")');
-    await page.waitForSelector('.page--mark-management');
-
-    const suiteItems = page.locator('.suite-item');
+    const suiteItems = page.locator('.suite-list ion-item');
     const count = await suiteItems.count();
     console.log('Number of suites on manage page:', count);
 
     expect(count).toBeGreaterThanOrEqual(2);
 
-    await expect(page.locator('.suite-item:has-text("Mood")')).toBeVisible();
-    await expect(page.locator('.suite-item:has-text("Checkmarks")')).toBeVisible();
-    await expect(page.locator('.suite-item:has-text("Recent")')).not.toBeVisible();
+    await expect(suiteItems.filter({ hasText: 'Mood' }).first()).toBeVisible();
+    await expect(suiteItems.filter({ hasText: 'Checkmarks' }).first()).toBeVisible();
+    await expect(suiteItems.filter({ hasText: 'Recent' }).first()).not.toBeVisible();
   });
 
   test('mood suite shows 5 marks with colors', async ({ page }) => {
-    await page.click('.btn-menu');
-    await page.waitForSelector('.side-menu--open');
-    await page.waitForTimeout(400);
+    await navigateViaMenu(page, 'Manage Marks');
+    await page.waitForSelector('.suite-list');
 
-    await page.click('.side-menu__item:has-text("Manage Marks")');
-    await page.waitForSelector('.page--mark-management');
-
-    const moodSuite = page.locator('.suite-item:has-text("Mood")');
+    const moodSuite = page.locator('.suite-list ion-item').filter({ hasText: 'Mood' }).first();
     await moodSuite.click();
     await page.waitForTimeout(300);
 
@@ -442,13 +420,12 @@ test.describe('Recent Marks Tests', () => {
     await navigateToBoard(page);
     await openMarkSelector(page);
 
-    const suiteDropdown = page.locator('.suite-dropdown');
-    const options = await suiteDropdown.locator('option').allTextContents();
+    const options = await getIonSelectOptions(page, '.suite-dropdown');
     console.log('Suite dropdown options:', options);
 
-    expect(options).not.toContain('Recent');
-    expect(options).toContain('Mood');
-    expect(options).toContain('Checkmarks');
+    expect(options.some(o => o.includes('Recent'))).toBeFalsy();
+    expect(options.some(o => o.includes('Mood'))).toBeTruthy();
+    expect(options.some(o => o.includes('Checkmarks'))).toBeTruthy();
   });
 
   test('recent mark shows correct emoji and background color', async ({ page }) => {

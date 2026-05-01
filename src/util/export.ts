@@ -1,6 +1,6 @@
 import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
 import { Capacitor } from '@capacitor/core';
-import { Board, MarkSuite, AppState } from '../types';
+import { Board, MarkSuite, AppState } from '../models';
 
 interface ExportData {
   version: string;

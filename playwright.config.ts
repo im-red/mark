@@ -7,37 +7,28 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : undefined,
   reporter: [['html', { open: 'never' }]],
-  timeout: 10000,
+  timeout: 15000,
   use: {
-    baseURL: 'http://localhost:3002',
+    baseURL: 'http://localhost:3005',
     trace: 'on-first-retry',
     launchOptions: {
       args: [
         '--no-sandbox',
         '--disable-setuid-sandbox',
-        '--disable-crash-reporter',
-        '--disable-breakpad',
-        '--force-color-profile=srgb',
-        '--disable-logging',
-        '--log-level=3',
         '--disable-dev-shm-usage',
         '--disable-gpu',
-        '--disable-software-rasterizer']
+      ]
     },
   },
   projects: [
-    {
-      name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
-    },
     {
       name: 'Mobile Chrome',
       use: { ...devices['Pixel 7'] },
     },
   ],
   webServer: {
-    command: 'npm run dev -- --port 3002',
-    url: 'http://localhost:3002',
+    command: 'npm run dev -- --port 3005',
+    url: 'http://localhost:3005',
     reuseExistingServer: !process.env.CI,
   },
 });

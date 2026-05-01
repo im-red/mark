@@ -6,9 +6,9 @@ import {
   RECENT_SUITE_ID,
   createDefaultMarkSuites,
   generateId,
-} from '../types';
+} from '../models';
 import { useLocalStorageState } from '../hooks/useLocalStorageState';
-import { syncBuiltInSuites } from '../utils/syncBuiltInSuites';
+import { syncBuiltInSuites } from '../util/syncBuiltInSuites';
 
 interface MarkSuiteContextValue {
   suites: MarkSuite[];

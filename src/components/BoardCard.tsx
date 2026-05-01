@@ -1,4 +1,11 @@
 import React from 'react';
+import {
+  IonCard,
+  IonCardHeader,
+  IonCardTitle,
+  IonCardSubtitle,
+  IonIcon,
+} from '@ionic/react';
 
 interface BoardCardProps {
   id: string;
@@ -33,17 +40,14 @@ const BoardCard: React.FC<BoardCardProps> = ({
   };
 
   return (
-    <div className="board-card" onClick={() => onClick(id)}>
-      <div className="board-card__content">
-        <h3 className="board-card__name">{name}</h3>
-        <div className="board-card__meta">
-          <span className="board-card__count">{markCount} marks</span>
-          <span className="board-card__dot">·</span>
-          <span className="board-card__date">{formatDate(lastUpdated)}</span>
-        </div>
-      </div>
-      <div className="board-card__arrow">›</div>
-    </div>
+    <IonCard button onClick={() => onClick(id)} className="board-card">
+      <IonCardHeader>
+        <IonCardTitle>{name}</IonCardTitle>
+        <IonCardSubtitle>
+          {markCount} marks · {formatDate(lastUpdated)}
+        </IonCardSubtitle>
+      </IonCardHeader>
+    </IonCard>
   );
 };
 

@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useCallback, useMemo } from 'react';
-import { Board, AppState, createDefaultBoard, createDefaultMarkSuites } from '../types';
+import { Board, AppState, createDefaultBoard, createDefaultMarkSuites } from '../models';
 import { useLocalStorageState } from '../hooks/useLocalStorageState';
 
 interface BoardContextValue {

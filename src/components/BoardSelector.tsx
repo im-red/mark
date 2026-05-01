@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useBoard } from '../context/BoardContext';
+import { useBoard } from '../data/BoardContext';
 
 const BoardSelector: React.FC = () => {
   const { boards, currentBoardId, switchBoard, createBoard, updateBoard, deleteBoard } = useBoard();
