@@ -1,3 +1,16 @@
+## [v1.2.0] - 2026-05-02
+
+### New Features
+
+- **Ionic Framework Integration** - Reimplemented the entire app using Ionic React components for a native mobile experience with improved UI consistency
+- **Ionic Specs Support** - Adopted Ionic design specifications for layout, navigation, and component styling
+
+### Improvements
+
+- **Capacitor 8 Upgrade** - Upgraded to Capacitor 8 with updated Android build configuration and Gradle dependencies
+- **Project Structure** - Reorganized source files into clearer directories (pages, data, models, util) for better maintainability
+- **Test Coverage** - Updated test cases to align with the new Ionic-based UI and navigation
+
 ## [v1.1.0] - 2026-05-01
 
 ### New Features
