@@ -983,7 +983,6 @@ body {
 .mark-stats__bar-wrapper {
   flex: 1;
   height: 24px;
-  background: var(--surface);
   border-radius: 8px;
   overflow: hidden;
 }
@@ -991,6 +990,7 @@ body {
 .mark-stats__bar {
   height: 100%;
   border-radius: 8px;
+  border: 1px solid var(--border-color);
   min-width: 4px;
   transition: width 0.3s ease;
 }
