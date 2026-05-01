@@ -1,4 +1,46 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, Page } from '@playwright/test';
+
+async function navigateToBoard(page: Page) {
+  await page.click('.board-card');
+  await page.waitForSelector('.calendar');
+}
+
+async function openMarkSelector(page: Page) {
+  await page.click('.calendar-day');
+  await page.waitForSelector('.mark-selector');
+}
+
+function getRecentSection(page: Page) {
+  return page.locator('.mark-section', { has: page.getByText('Recent Marks', { exact: true }) });
+}
+
+function getSuiteSection(page: Page) {
+  return page.locator('.mark-section', { has: page.getByText('Mark Suites', { exact: true }) });
+}
+
+async function applyMarkFromSuite(page: Page, suiteName: string, markIndex: number) {
+  const suiteDropdown = page.locator('.suite-dropdown');
+  await suiteDropdown.selectOption({ label: suiteName });
+  await page.waitForTimeout(300);
+  const suiteSection = getSuiteSection(page);
+  const markBtn = suiteSection.locator('.mark-btn').nth(markIndex);
+  await markBtn.click();
+  await page.waitForTimeout(500);
+}
+
+async function ensureBoardExists(page: Page) {
+  const boardList = page.locator('.board-list');
+  const hasBoards = await boardList.count().then(c => c > 0);
+  if (!hasBoards) {
+    await page.locator('.fab').click();
+    await page.waitForSelector('.overlay', { state: 'visible' });
+    await page.locator('.overlay__content .input').fill('Test Board');
+    await page.locator('.overlay__actions .btn-primary').click();
+    await page.waitForSelector('.page--board-detail', { state: 'visible' });
+    await page.locator('.btn-back').click();
+    await page.waitForSelector('.board-card', { state: 'visible' });
+  }
+}
 
 test.describe('Mark System Tests', () => {
   test.beforeEach(async ({ page }) => {
@@ -280,6 +322,154 @@ test.describe('Mark Management Page Tests', () => {
     );
     console.log('First mood mark background on manage page:', bgColor);
 
+    expect(bgColor).not.toBe('rgba(0, 0, 0, 0)');
+    expect(bgColor).not.toBe('rgb(255, 255, 255)');
+  });
+});
+
+test.describe('Recent Marks Tests', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/');
+    await page.waitForLoadState('networkidle');
+    await ensureBoardExists(page);
+  });
+
+  test('no recent marks initially shows empty message', async ({ page }) => {
+    await navigateToBoard(page);
+    await openMarkSelector(page);
+
+    const recentSection = getRecentSection(page);
+    const emptyMsg = recentSection.locator('.mark-grid__empty');
+    await expect(emptyMsg).toBeVisible();
+    await expect(emptyMsg).toHaveText('No recent marks.');
+
+    const recentBtns = recentSection.locator('.mark-btn');
+    expect(await recentBtns.count()).toBe(0);
+  });
+
+  test('applied mark appears in recent marks', async ({ page }) => {
+    await navigateToBoard(page);
+
+    await openMarkSelector(page);
+    await applyMarkFromSuite(page, 'Checkmarks', 0);
+
+    await openMarkSelector(page);
+
+    const recentSection = getRecentSection(page);
+    const recentBtns = recentSection.locator('.mark-btn');
+    expect(await recentBtns.count()).toBe(1);
+
+    const markText = await recentBtns.first().textContent();
+    expect(markText).toContain('✓');
+  });
+
+  test('most recently applied mark appears first in recent marks', async ({ page }) => {
+    await navigateToBoard(page);
+
+    await openMarkSelector(page);
+    await applyMarkFromSuite(page, 'Checkmarks', 0);
+
+    await openMarkSelector(page);
+    await applyMarkFromSuite(page, 'Mood', 0);
+
+    await openMarkSelector(page);
+
+    const recentSection = getRecentSection(page);
+    const recentBtns = recentSection.locator('.mark-btn');
+    expect(await recentBtns.count()).toBe(2);
+
+    const firstMarkText = await recentBtns.first().textContent();
+    console.log('First recent mark (should be Mood):', firstMarkText);
+    expect(firstMarkText).toContain('😣');
+
+    const secondMarkText = await recentBtns.nth(1).textContent();
+    console.log('Second recent mark (should be Checkmark):', secondMarkText);
+    expect(secondMarkText).toContain('✓');
+  });
+
+  test('re-applying same mark moves it to front of recent marks', async ({ page }) => {
+    await navigateToBoard(page);
+
+    await openMarkSelector(page);
+    await applyMarkFromSuite(page, 'Mood', 0);
+
+    await openMarkSelector(page);
+    await applyMarkFromSuite(page, 'Checkmarks', 0);
+
+    await openMarkSelector(page);
+    await applyMarkFromSuite(page, 'Mood', 0);
+
+    await openMarkSelector(page);
+
+    const recentSection = getRecentSection(page);
+    const recentBtns = recentSection.locator('.mark-btn');
+    expect(await recentBtns.count()).toBe(2);
+
+    const firstMarkText = await recentBtns.first().textContent();
+    console.log('First recent mark after re-applying Mood:', firstMarkText);
+    expect(firstMarkText).toContain('😣');
+
+    const secondMarkText = await recentBtns.nth(1).textContent();
+    console.log('Second recent mark after re-applying Mood:', secondMarkText);
+    expect(secondMarkText).toContain('✓');
+  });
+
+  test('recent marks limited to 5 entries', async ({ page }) => {
+    await navigateToBoard(page);
+
+    for (let i = 0; i < 5; i++) {
+      await openMarkSelector(page);
+      await applyMarkFromSuite(page, 'Mood', i);
+    }
+
+    await openMarkSelector(page);
+    await applyMarkFromSuite(page, 'Checkmarks', 0);
+
+    await openMarkSelector(page);
+
+    const recentSection = getRecentSection(page);
+    const recentBtns = recentSection.locator('.mark-btn');
+    const count = await recentBtns.count();
+    console.log('Number of recent marks after applying 6:', count);
+    expect(count).toBe(5);
+
+    const firstMarkText = await recentBtns.first().textContent();
+    console.log('First recent mark (should be Checkmark):', firstMarkText);
+    expect(firstMarkText).toContain('✓');
+  });
+
+  test('recent suite not shown in suite dropdown', async ({ page }) => {
+    await navigateToBoard(page);
+    await openMarkSelector(page);
+
+    const suiteDropdown = page.locator('.suite-dropdown');
+    const options = await suiteDropdown.locator('option').allTextContents();
+    console.log('Suite dropdown options:', options);
+
+    expect(options).not.toContain('Recent');
+    expect(options).toContain('Mood');
+    expect(options).toContain('Checkmarks');
+  });
+
+  test('recent mark shows correct emoji and background color', async ({ page }) => {
+    await navigateToBoard(page);
+
+    await openMarkSelector(page);
+    await applyMarkFromSuite(page, 'Checkmarks', 1);
+
+    await openMarkSelector(page);
+
+    const recentSection = getRecentSection(page);
+    const recentBtn = recentSection.locator('.mark-btn').first();
+
+    const markText = await recentBtn.textContent();
+    console.log('Recent mark emoji:', markText);
+    expect(markText).toContain('✗');
+
+    const bgColor = await recentBtn.evaluate((el) =>
+      window.getComputedStyle(el).backgroundColor
+    );
+    console.log('Recent mark background color:', bgColor);
     expect(bgColor).not.toBe('rgba(0, 0, 0, 0)');
     expect(bgColor).not.toBe('rgb(255, 255, 255)');
   });
