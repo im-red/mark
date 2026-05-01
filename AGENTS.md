@@ -2,7 +2,7 @@
 
 ## UI Design Guidelines
 
-Always reference .agents/specs/STYLE_GUIDE.md before generating any UI or CSS.
+Always reference .agents/specs/IONIC_PROJECT_GUIDE.md before generating any UI or CSS.
 
 ## Testing After File Edits
 
