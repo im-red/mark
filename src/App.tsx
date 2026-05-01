@@ -1,5 +1,5 @@
 import React from 'react';
-import { Route } from 'react-router-dom';
+import { Route, useHistory } from 'react-router-dom';
 import {
   IonApp,
   IonRouterOutlet,
@@ -7,6 +7,8 @@ import {
 } from '@ionic/react';
 import { IonReactRouter } from '@ionic/react-router';
 import { SplashScreen } from '@capacitor/splash-screen';
+import { App as CapacitorApp } from '@capacitor/app';
+import { Capacitor } from '@capacitor/core';
 import { BoardProvider } from './data/BoardContext';
 import { MarkSuiteProvider } from './data/MarkSuiteContext';
 import HomePage from './pages/HomePage';
@@ -25,6 +27,8 @@ setupIonicReact({
 });
 
 const App: React.FC = () => {
+  const history = useHistory();
+
   React.useEffect(() => {
     const hideSplash = async () => {
       try {
@@ -35,6 +39,25 @@ const App: React.FC = () => {
     };
     hideSplash();
   }, []);
+
+  React.useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return;
+
+    const backButtonHandler = CapacitorApp.addListener(
+      'backButton',
+      ({ canGoBack }) => {
+        if (canGoBack) {
+          history.goBack();
+        } else {
+          CapacitorApp.exitApp();
+        }
+      }
+    );
+
+    return () => {
+      backButtonHandler.then(handler => handler.remove());
+    };
+  }, [history]);
 
   return (
     <IonApp>
