@@ -28,7 +28,7 @@ test.describe('Navigation Tests', () => {
   test('home page displays add board button', async ({ page }) => {
     await page.waitForSelector('.app-header', { state: 'visible' });
 
-    const addButton = page.locator('.btn-icon');
+    const addButton = page.locator('.fab');
     await expect(addButton).toBeVisible();
 
     console.log('✓ Add board button is visible on home page');
@@ -98,7 +98,7 @@ test.describe('Navigation Tests', () => {
   test('create board overlay opens when add button is clicked', async ({ page }) => {
     await page.waitForSelector('.app-header', { state: 'visible' });
 
-    const addButton = page.locator('.btn-icon');
+    const addButton = page.locator('.fab');
     await addButton.click();
 
     await page.waitForSelector('.overlay', { state: 'visible' });
@@ -112,7 +112,7 @@ test.describe('Navigation Tests', () => {
   test('create board overlay can be cancelled', async ({ page }) => {
     await page.waitForSelector('.app-header', { state: 'visible' });
 
-    await page.locator('.btn-icon').click();
+    await page.locator('.fab').click();
     await page.waitForSelector('.overlay', { state: 'visible' });
 
     const cancelButton = page.locator('.overlay__actions .btn-secondary');
@@ -126,7 +126,7 @@ test.describe('Navigation Tests', () => {
   test('create board and navigate to board detail', async ({ page }) => {
     await page.waitForSelector('.app-header', { state: 'visible' });
 
-    await page.locator('.btn-icon').click();
+    await page.locator('.fab').click();
     await page.waitForSelector('.overlay', { state: 'visible' });
 
     const input = page.locator('.overlay__content .input');
@@ -146,7 +146,7 @@ test.describe('Navigation Tests', () => {
   test('navigate back from board detail to home', async ({ page }) => {
     await page.waitForSelector('.app-header', { state: 'visible' });
 
-    await page.locator('.btn-icon').click();
+    await page.locator('.fab').click();
     await page.waitForSelector('.overlay', { state: 'visible' });
 
     await page.locator('.overlay__content .input').fill('Test Board');
@@ -167,7 +167,7 @@ test.describe('Navigation Tests', () => {
   test('board card click navigates to board detail', async ({ page }) => {
     await page.waitForSelector('.app-header', { state: 'visible' });
 
-    await page.locator('.btn-icon').click();
+    await page.locator('.fab').click();
     await page.waitForSelector('.overlay', { state: 'visible' });
 
     await page.locator('.overlay__content .input').fill('My First Board');
@@ -244,7 +244,7 @@ test.describe('Mobile Navigation Tests', () => {
     const menuBox = await menuButton.boundingBox();
     expect(menuBox).not.toBeNull();
 
-    const addButton = page.locator('.btn-icon');
+    const addButton = page.locator('.fab');
     const addBox = await addButton.boundingBox();
     expect(addBox).not.toBeNull();
 
@@ -271,7 +271,7 @@ test.describe('Mobile Navigation Tests', () => {
   test('board card is clickable on mobile viewport', async ({ page }) => {
     await page.waitForSelector('.app-header', { state: 'visible' });
 
-    await page.locator('.btn-icon').click();
+    await page.locator('.fab').click();
     await page.waitForSelector('.overlay', { state: 'visible' });
 
     await page.locator('.overlay__content .input').fill('Mobile Board');

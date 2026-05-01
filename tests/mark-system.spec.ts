@@ -4,6 +4,18 @@ test.describe('Mark System Tests', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/');
     await page.waitForLoadState('networkidle');
+    // Ensure a board exists for these tests
+    const boardList = page.locator('.board-list');
+    const hasBoards = await boardList.count().then(c => c > 0);
+    if (!hasBoards) {
+      await page.locator('.fab').click();
+      await page.waitForSelector('.overlay', { state: 'visible' });
+      await page.locator('.overlay__content .input').fill('Test Board');
+      await page.locator('.overlay__actions .btn-primary').click();
+      await page.waitForSelector('.page--board-detail', { state: 'visible' });
+      await page.locator('.btn-back').click(); // go back to home
+      await page.waitForSelector('.board-card', { state: 'visible' });
+    }
   });
 
   test('checkmarks suite exists with check, cross and question marks', async ({ page }) => {
@@ -175,7 +187,7 @@ test.describe('Mark System Tests', () => {
     const options = await suiteDropdown.locator('option').allTextContents();
     console.log('Available suites:', options);
 
-    expect(options).toContain('Recent');
+    expect(options).not.toContain('Recent');
     expect(options).toContain('Mood');
     expect(options).toContain('Checkmarks');
   });
@@ -185,6 +197,18 @@ test.describe('Mark Management Page Tests', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/');
     await page.waitForLoadState('networkidle');
+    // Ensure a board exists for these tests
+    const boardList = page.locator('.board-list');
+    const hasBoards = await boardList.count().then(c => c > 0);
+    if (!hasBoards) {
+      await page.locator('.fab').click();
+      await page.waitForSelector('.overlay', { state: 'visible' });
+      await page.locator('.overlay__content .input').fill('Test Board');
+      await page.locator('.overlay__actions .btn-primary').click();
+      await page.waitForSelector('.page--board-detail', { state: 'visible' });
+      await page.locator('.btn-back').click(); // go back to home
+      await page.waitForSelector('.board-card', { state: 'visible' });
+    }
   });
 
   test('manage marks page shows built-in suites after clearing storage', async ({ page }) => {
