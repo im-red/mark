@@ -1,0 +1,134 @@
+.mark-stats {
+  padding: 0 1rem 1rem;
+}
+
+.mark-stats__title {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 0.75rem;
+}
+
+.mark-stats__item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.mark-stats__emoji {
+  font-size: 1.25rem;
+  width: 32px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.mark-stats__bar-wrapper {
+  flex: 1;
+  height: 24px;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.mark-stats__bar {
+  height: 100%;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  min-width: 4px;
+  transition: width 0.3s ease;
+}
+
+.mark-stats__count {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-main);
+  min-width: 28px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.export-capture-area {
+  background: var(--background);
+}
+
+.export-capture-area__header {
+  padding: 0.75rem 1rem 0;
+  align-items: baseline;
+  gap: 0.5rem;
+  display: none;
+}
+
+.export-capture-area--exporting .export-capture-area__header {
+  margin-bottom: 1rem;
+  display: flex;
+}
+
+.export-capture-area--exporting {
+  padding: 1rem;
+}
+
+.export-capture-area--exporting .calendar {
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+}
+
+.export-capture-area--exporting .mark-stats {
+  margin-top: 1rem;
+}
+
+.export-capture-area--exporting .today-btn,
+.export-capture-area--exporting .calendar-header ion-button {
+  display: none;
+}
+
+.export-capture-area--exporting .calendar-day.today {
+  background: var(--background);
+  border: none;
+}
+
+.export-capture-area--exporting .calendar-day.current-month.today .day-number {
+  color: var(--text-main);
+  background: none;
+  border-radius: 0;
+  width: auto;
+  height: auto;
+  font-weight: 500;
+  font-size: 0.8rem;
+  display: inline;
+}
+
+.export-capture-area--exporting .calendar-day.current-month.today.has-mark .day-number {
+  color: var(--text-main);
+  background: rgba(255, 255, 255, 0.85);
+  border-radius: 50%;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 500;
+  font-size: 0.75rem;
+}
+
+.export-capture-area--exporting .year-month__day--today {
+  background: none;
+  border: none;
+}
+
+.export-capture-area--exporting .year-month__day--today .year-month__day-num {
+  color: var(--text-main);
+  font-weight: 600;
+}
+
+.export-capture-area__title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.export-capture-area__subtitle {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+}

@@ -12,6 +12,7 @@ import {
 } from '@ionic/react';
 import { Mark, RECENT_SUITE_ID } from '../models';
 import { useMarkSuite } from '../data/MarkSuiteContext';
+import './MarkSelector.scss';
 
 interface MarkSelectorProps {
   isOpen: boolean;

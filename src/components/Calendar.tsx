@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { Mark } from '../models';
 import { IonButton, IonIcon } from '@ionic/react';
 import { chevronBack, chevronForward } from 'ionicons/icons';
+import './Calendar.scss';
 
 type ViewMode = 'month' | 'year';
 

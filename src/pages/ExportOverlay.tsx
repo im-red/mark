@@ -54,7 +54,7 @@ const ExportOverlay: React.FC = () => {
                     be imported later to restore your data.
                 </p>
 
-                <IonList>
+                <IonList className="edge-to-edge">
                     <IonItem>
                         <IonLabel>Boards</IonLabel>
                         <IonNote slot="end">{boards.length}</IonNote>

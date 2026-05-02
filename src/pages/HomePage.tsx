@@ -20,6 +20,7 @@ import { add } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
 import { useBoard } from '../data/BoardContext';
 import BoardCard from '../components/BoardCard';
+import './HomePage.scss';
 
 const HomePage: React.FC = () => {
     const { boards, createBoard } = useBoard();
@@ -103,7 +104,7 @@ const HomePage: React.FC = () => {
                     </IonToolbar>
                 </IonHeader>
                 <IonContent className="ion-padding">
-                    <IonList>
+                    <IonList className="edge-to-edge">
                         <IonItem>
                             <IonInput
                                 label="Board name"

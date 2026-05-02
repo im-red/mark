@@ -26,7 +26,7 @@ const SideMenu: React.FC = () => {
         </IonToolbar>
       </IonHeader>
       <IonContent>
-        <IonList>
+        <IonList lines="full">
           <IonMenuToggle autoHide={false}>
             <IonItem button routerLink="/mark-management" routerDirection="none">
               <IonIcon icon={colorPalette} slot="start" />

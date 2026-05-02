@@ -6,6 +6,7 @@ import {
   IonCardSubtitle,
   IonIcon,
 } from '@ionic/react';
+import './BoardCard.scss';
 
 interface BoardCardProps {
   id: string;

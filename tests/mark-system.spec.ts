@@ -393,6 +393,7 @@ test.describe('Recent Marks Tests', () => {
   });
 
   test('recent marks limited to 5 entries', async ({ page }) => {
+    test.setTimeout(30000);
     await navigateToBoard(page);
 
     for (let i = 0; i < 5; i++) {

@@ -23,6 +23,7 @@ import { Board, Mark } from '../models';
 import { useMarkSuite } from '../data/MarkSuiteContext';
 import { useBoard } from '../data/BoardContext';
 import { exportViewAsImage } from '../util/exportImage';
+import './BoardDetailPage.scss';
 
 interface BoardDetailPageProps {
     match?: { params: { id: string } };

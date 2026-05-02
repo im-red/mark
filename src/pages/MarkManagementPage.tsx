@@ -16,9 +16,10 @@ import {
     IonIcon,
     IonAlert,
 } from '@ionic/react';
-import { add } from 'ionicons/icons';
+import { add, create, trash } from 'ionicons/icons';
 import { MarkSuite, Mark } from '../models';
 import { useMarkSuite } from '../data/MarkSuiteContext';
+import './MarkManagementPage.scss';
 
 const PRESET_COLORS = [
     '#fecaca', '#fed7aa', '#d9f99d', '#a5f3fc', '#e9d5ff',
@@ -38,6 +39,8 @@ const MarkManagementPage: React.FC = () => {
     const [markName, setMarkName] = useState('');
     const [showDeleteAlert, setShowDeleteAlert] = useState(false);
     const [deleteTarget, setDeleteTarget] = useState<{ type: 'suite' | 'mark'; id: string; suiteId?: string } | null>(null);
+    const [showMarkDetail, setShowMarkDetail] = useState(false);
+    const [viewingMark, setViewingMark] = useState<Mark | null>(null);
 
     const manageSuites = suites.filter(s => !s.isDynamic);
     const selectedSuite = suites.find(s => s.id === selectedSuiteId);
@@ -69,6 +72,7 @@ const MarkManagementPage: React.FC = () => {
         } else if (deleteTarget.suiteId) {
             deleteMark(deleteTarget.suiteId, deleteTarget.id);
             setEditingSuite(null);
+            setShowMarkDetail(false);
         }
         setDeleteTarget(null);
         setShowDeleteAlert(false);
@@ -119,6 +123,11 @@ const MarkManagementPage: React.FC = () => {
         setShowMarkModal(true);
     };
 
+    const openMarkDetail = (mark: Mark) => {
+        setViewingMark(mark);
+        setShowMarkDetail(true);
+    };
+
     return (
         <IonPage>
             <IonHeader>
@@ -139,7 +148,7 @@ const MarkManagementPage: React.FC = () => {
                 </IonToolbar>
             </IonHeader>
 
-            <IonContent fullscreen className="ion-padding">
+            <IonContent fullscreen>
                 <IonHeader collapse="condense">
                     <IonToolbar>
                         <IonTitle size="large">Manage Marks</IonTitle>
@@ -148,7 +157,7 @@ const MarkManagementPage: React.FC = () => {
 
                 <div className="suite-list">
                     <h2 className="section-title">Suites</h2>
-                    <IonList>
+                    <IonList lines="full">
                         {manageSuites.map(suite => (
                             <IonItem
                                 key={suite.id}
@@ -184,45 +193,33 @@ const MarkManagementPage: React.FC = () => {
                 </div>
 
                 {selectedSuite && (
-                    <div className="mark-list">
-                        <div className="mark-list__header">
-                            <h2 className="section-title">{selectedSuite.name}</h2>
-                            {!selectedSuite.isBuiltIn && !selectedSuite.isDynamic && (
-                                <IonButton size="small" onClick={() => {
-                                    setEditingMark(null);
-                                    setMarkEmojis('');
-                                    setMarkColor('#e0e0e0');
-                                    setMarkName('');
-                                    setShowMarkModal(true);
-                                }}>
-                                    + Add Mark
-                                </IonButton>
-                            )}
-                        </div>
-
-                        {selectedSuite.isDynamic && (
-                            <p className="mark-list__hint">
-                                Recent marks are automatically added when you use marks on the calendar.
-                            </p>
-                        )}
-
+                    <div className="mark-list ion-padding">
                         <div className="mark-grid">
+                            {!selectedSuite.isBuiltIn && !selectedSuite.isDynamic && (
+                                <div
+                                    className="mark-item mark-item--add"
+                                    onClick={() => {
+                                        setEditingMark(null);
+                                        setMarkEmojis('');
+                                        setMarkColor('#e0e0e0');
+                                        setMarkName('');
+                                        setShowMarkModal(true);
+                                    }}
+                                >
+                                    <IonIcon icon={add} className="mark-item__add-icon" />
+                                </div>
+                            )}
                             {selectedSuite.marks.map(mark => (
                                 <div
                                     key={mark.id}
                                     className="mark-item"
                                     style={{ backgroundColor: mark.backgroundColor }}
-                                    onClick={() => {
-                                        if (!selectedSuite.isBuiltIn && !selectedSuite.isDynamic) {
-                                            openEditMark(selectedSuite, mark);
-                                        }
-                                    }}
+                                    onClick={() => openMarkDetail(mark)}
                                 >
                                     <span className="mark-item__emojis">{mark.emojis.join('')}</span>
-                                    {mark.name && <span className="mark-item__name">{mark.name}</span>}
                                 </div>
                             ))}
-                            {selectedSuite.marks.length === 0 && (
+                            {selectedSuite.marks.length === 0 && selectedSuite.isBuiltIn && (
                                 <p className="mark-list__empty">No marks in this suite</p>
                             )}
                         </div>
@@ -240,7 +237,7 @@ const MarkManagementPage: React.FC = () => {
                     </IonToolbar>
                 </IonHeader>
                 <IonContent className="ion-padding">
-                    <IonList>
+                    <IonList className="edge-to-edge">
                         <IonItem>
                             <IonInput
                                 label="Suite name"
@@ -272,7 +269,7 @@ const MarkManagementPage: React.FC = () => {
                     </IonToolbar>
                 </IonHeader>
                 <IonContent className="ion-padding">
-                    <IonList>
+                    <IonList class="edge-to-edge" lines="full">
                         <IonItem>
                             <IonInput
                                 label="Emojis"
@@ -294,7 +291,7 @@ const MarkManagementPage: React.FC = () => {
                         </IonItem>
                     </IonList>
 
-                    <IonLabel className="input-label">Background Color</IonLabel>
+                    <IonLabel className="input-label ion-padding-top">Background Color</IonLabel>
                     <div className="color-picker">
                         {PRESET_COLORS.map(color => (
                             <button
@@ -338,6 +335,65 @@ const MarkManagementPage: React.FC = () => {
                         {editingMark ? 'Save' : 'Create'}
                     </IonButton>
                 </IonContent>
+            </IonModal>
+
+            <IonModal
+                isOpen={showMarkDetail}
+                onDidDismiss={() => setShowMarkDetail(false)}
+                id="mark-detail-modal"
+            >
+                {viewingMark && selectedSuite && (
+                    <div className="mark-detail-dialog">
+                        <div
+                            className="mark-detail-dialog__preview"
+                            style={{ backgroundColor: viewingMark.backgroundColor }}
+                        >
+                            {viewingMark.emojis.join('')}
+                        </div>
+
+                        <IonList lines="none">
+                            <IonItem>
+                                <IonLabel>
+                                    <p>Emojis</p>
+                                    <h2>{viewingMark.emojis.join(' ') || '-'}</h2>
+                                </IonLabel>
+                            </IonItem>
+                            <IonItem>
+                                <IonLabel>
+                                    <p>Name</p>
+                                    <h2>{viewingMark.name || '-'}</h2>
+                                </IonLabel>
+                            </IonItem>
+                        </IonList>
+
+                        {!selectedSuite.isBuiltIn && !selectedSuite.isDynamic && (
+                            <>
+                                <IonButton
+                                    expand="block"
+                                    onClick={() => {
+                                        setShowMarkDetail(false);
+                                        openEditMark(selectedSuite, viewingMark);
+                                    }}
+                                >
+                                    <IonIcon slot="start" icon={create} />
+                                    Edit
+                                </IonButton>
+                                <IonButton
+                                    expand="block"
+                                    fill="outline"
+                                    color="danger"
+                                    onClick={() => {
+                                        setDeleteTarget({ type: 'mark', id: viewingMark.id, suiteId: selectedSuite.id });
+                                        setShowDeleteAlert(true);
+                                    }}
+                                >
+                                    <IonIcon slot="start" icon={trash} />
+                                    Delete
+                                </IonButton>
+                            </>
+                        )}
+                    </div>
+                )}
             </IonModal>
 
             <IonAlert

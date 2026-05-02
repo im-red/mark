@@ -1,0 +1,47 @@
+.mark-section {
+  margin-bottom: 1.25rem;
+}
+
+.mark-section:last-child {
+  margin-bottom: 0;
+}
+
+.mark-section h4 {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-main);
+  margin-bottom: 0.5rem;
+}
+
+.suite-dropdown {
+  --padding-start: 0;
+  --padding-end: 0;
+  margin-bottom: 0.75rem;
+  font-size: 0.9rem;
+}
+
+.mark-btn {
+  aspect-ratio: 1;
+  border: none;
+  border-radius: 12px;
+  font-size: 1.5rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.15s, box-shadow 0.15s;
+  position: relative;
+}
+
+.mark-btn__text {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.mark-btn:active {
+  transform: scale(0.92);
+}
+
+.mark-btn.selected {
+  box-shadow: 0 0 0 3px var(--primary);
+}
