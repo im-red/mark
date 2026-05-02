@@ -133,7 +133,7 @@ function AboutPage() {
                     onDidDismiss={() => setUpdateAlert(prev => ({ ...prev, show: false }))}
                     header={updateAlert.hasUpdate ? 'New Version Available' : 'Up to Date'}
                     message={updateAlert.hasUpdate
-                        ? `Latest Version: v${updateAlert.latestVersion}. Current Version: v${updateAlert.currentVersion}`
+                        ? `Latest Version: v${updateAlert.latestVersion}.<br />Current Version: v${updateAlert.currentVersion}`
                         : `Current Version: v${updateAlert.currentVersion}`}
                     buttons={[
                         {
