@@ -1,3 +1,10 @@
+## [v1.3.0] - 2026-05-02
+
+### New Features
+
+- **Mark Comments** - Add comments to marks for additional context and notes, making it easier to track important information
+- **Recent Marks Preview** - Display recent marks directly on board cards in the home page for quick overview without opening the board
+
 ## [v1.2.1] - 2026-05-02
 
 ### Improvements
