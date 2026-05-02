@@ -60,6 +60,8 @@ async function applyMarkFromSuite(page: Page, suiteName: string, markIndex: numb
   const markBtn = suiteSection.locator('.mark-btn').nth(markIndex);
   await markBtn.click();
   await page.waitForTimeout(500);
+  await page.locator('ion-modal:not(.overlay-hidden) ion-button').filter({ hasText: 'Close' }).click();
+  await page.waitForTimeout(300);
 }
 
 async function ensureBoardExists(page: Page) {
@@ -76,6 +78,27 @@ async function ensureBoardExists(page: Page) {
     await page.locator('ion-back-button').click();
     await page.waitForSelector('.board-card', { state: 'visible' });
   }
+}
+
+async function closeModal(page: Page) {
+  await page.locator('ion-modal:not(.overlay-hidden) ion-button').filter({ hasText: 'Close' }).click();
+  await page.waitForTimeout(300);
+}
+
+function getCommentSection(page: Page) {
+  return page.locator('ion-modal:not(.overlay-hidden) .comment-section');
+}
+
+function getCommentDisplay(page: Page) {
+  return page.locator('ion-modal:not(.overlay-hidden) .comment-display');
+}
+
+function getCommentInput(page: Page) {
+  return page.locator('ion-modal:not(.overlay-hidden) .comment-input textarea');
+}
+
+function getCommentEditBtn(page: Page) {
+  return page.locator('ion-modal:not(.overlay-hidden) .comment-edit-btn');
 }
 
 test.describe('Mark System Tests', () => {
@@ -631,5 +654,461 @@ test.describe('Per-Board Recent Marks Tests', () => {
     console.log('Persistent Board recent marks after switch:', marks);
     expect(marks[0]).toContain('✓');
     expect(marks[1]).toContain('😐');
+  });
+});
+
+test.describe('Comment System Tests', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/');
+    await page.waitForLoadState('networkidle');
+    await ensureBoardExists(page);
+  });
+
+  test('comment section is editable by default when no comment exists', async ({ page }) => {
+    await navigateToBoard(page);
+    await openMarkSelector(page);
+
+    const commentInput = getCommentInput(page);
+    await expect(commentInput).toBeVisible();
+  });
+
+  test('comment input shows placeholder when no comment exists', async ({ page }) => {
+    await navigateToBoard(page);
+    await openMarkSelector(page);
+
+    const commentInput = getCommentInput(page);
+    await expect(commentInput).toBeVisible();
+    await expect(commentInput).toHaveAttribute('placeholder', 'Add a comment (optional)');
+  });
+
+  test('comment section is readonly when comment exists', async ({ page }) => {
+    await navigateToBoard(page);
+    await openMarkSelector(page);
+
+    const commentInput = getCommentInput(page);
+    await commentInput.fill('Existing comment');
+    await page.waitForTimeout(200);
+
+    await closeModal(page);
+
+    await openMarkSelector(page);
+    const commentDisplay = getCommentDisplay(page);
+    await expect(commentDisplay).toBeVisible();
+    await expect(commentDisplay).toContainText('Existing comment');
+
+    const commentInputAfter = getCommentInput(page);
+    expect(await commentInputAfter.count()).toBe(0);
+  });
+
+  test('clicking edit button enables editing mode', async ({ page }) => {
+    await navigateToBoard(page);
+    await openMarkSelector(page);
+
+    const commentInput = getCommentInput(page);
+    await commentInput.fill('Test comment');
+    await page.waitForTimeout(200);
+
+    await closeModal(page);
+
+    await openMarkSelector(page);
+    const editBtn = getCommentEditBtn(page);
+    await editBtn.click();
+    await page.waitForTimeout(300);
+
+    const commentInputAfter = getCommentInput(page);
+    await expect(commentInputAfter).toBeVisible();
+  });
+
+  test('comment is saved when modal closes', async ({ page }) => {
+    await navigateToBoard(page);
+    await openMarkSelector(page);
+
+    const commentInput = getCommentInput(page);
+    await commentInput.fill('Test comment');
+    await page.waitForTimeout(200);
+
+    await closeModal(page);
+
+    await openMarkSelector(page);
+    const commentDisplayAfter = getCommentDisplay(page);
+    await expect(commentDisplayAfter).toContainText('Test comment');
+  });
+
+  test('empty comment is not saved', async ({ page }) => {
+    await navigateToBoard(page);
+    await openMarkSelector(page);
+
+    const commentInput = getCommentInput(page);
+    await commentInput.fill('   ');
+    await page.waitForTimeout(200);
+
+    await closeModal(page);
+
+    await openMarkSelector(page);
+    const commentInputAfter = getCommentInput(page);
+    await expect(commentInputAfter).toBeVisible();
+  });
+
+  test('comment is trimmed before saving', async ({ page }) => {
+    await navigateToBoard(page);
+    await openMarkSelector(page);
+
+    const commentInput = getCommentInput(page);
+    await commentInput.fill('  trimmed comment  ');
+    await page.waitForTimeout(200);
+
+    await closeModal(page);
+
+    await openMarkSelector(page);
+    const commentDisplayAfter = getCommentDisplay(page);
+    await expect(commentDisplayAfter).toContainText('trimmed comment');
+  });
+
+  test('comment fold indicator shows on day with comment', async ({ page }) => {
+    await navigateToBoard(page);
+    await openMarkSelector(page);
+
+    const commentInput = getCommentInput(page);
+    await commentInput.fill('Day with comment');
+    await page.waitForTimeout(200);
+
+    await closeModal(page);
+
+    const commentFold = page.locator('.calendar-day.current-month.has-comment .comment-fold').first();
+    await expect(commentFold).toBeVisible();
+  });
+
+  test('comment fold indicator does not show on day without comment', async ({ page }) => {
+    await navigateToBoard(page);
+
+    const today = new Date();
+    const dayOfMonth = today.getDate();
+    const calendarDays = page.locator('.calendar-day.current-month');
+
+    for (let i = 0; i < (await calendarDays.count()); i++) {
+      const dayText = await calendarDays.nth(i).locator('.day-number').textContent();
+      if (parseInt(dayText || '0') === dayOfMonth) {
+        const fold = calendarDays.nth(i).locator('.comment-fold');
+        expect(await fold.count()).toBe(0);
+        break;
+      }
+    }
+  });
+
+  test('comment resets when switching to another day', async ({ page }) => {
+    await navigateToBoard(page);
+
+    const calendarDays = page.locator('.calendar-day.current-month');
+    await calendarDays.first().click();
+    await page.waitForSelector('ion-modal:not(.overlay-hidden)', { state: 'visible' });
+    await page.waitForTimeout(300);
+
+    const commentInput = getCommentInput(page);
+    await commentInput.fill('First day comment');
+    await page.waitForTimeout(200);
+
+    await closeModal(page);
+
+    await calendarDays.nth(1).click();
+    await page.waitForSelector('ion-modal:not(.overlay-hidden)', { state: 'visible' });
+    await page.waitForTimeout(300);
+
+    const commentInputSecond = getCommentInput(page);
+    await expect(commentInputSecond).toBeVisible();
+    await expect(commentInputSecond).toHaveValue('');
+  });
+
+  test('can add comment without mark', async ({ page }) => {
+    await navigateToBoard(page);
+    await openMarkSelector(page);
+
+    const commentInput = getCommentInput(page);
+    await commentInput.fill('Comment without mark');
+    await page.waitForTimeout(200);
+
+    await closeModal(page);
+
+    const calendarDay = page.locator('.calendar-day.current-month').first();
+    const hasMark = await calendarDay.evaluate((el) => el.classList.contains('has-mark'));
+    expect(hasMark).toBe(false);
+
+    const commentFold = page.locator('.calendar-day.current-month .comment-fold').first();
+    await expect(commentFold).toBeVisible();
+  });
+
+  test('can have mark without comment', async ({ page }) => {
+    await navigateToBoard(page);
+    await openMarkSelector(page);
+
+    await applyMarkFromSuite(page, 'Checkmarks', 0);
+
+    const calendarDay = page.locator('.calendar-day.current-month.has-mark').first();
+    const commentFold = calendarDay.locator('.comment-fold');
+    expect(await commentFold.count()).toBe(0);
+  });
+
+  test('can have both mark and comment', async ({ page }) => {
+    await navigateToBoard(page);
+    await openMarkSelector(page);
+
+    await applyMarkFromSuite(page, 'Checkmarks', 0);
+
+    await openMarkSelector(page);
+    const commentInput = getCommentInput(page);
+    await commentInput.fill('Mark with comment');
+    await page.waitForTimeout(200);
+
+    await closeModal(page);
+
+    const calendarDay = page.locator('.calendar-day.current-month.has-mark').first();
+    await expect(calendarDay).toBeVisible();
+
+    const commentFold = calendarDay.locator('.comment-fold');
+    await expect(commentFold).toBeVisible();
+  });
+
+  test('clearing mark does not clear comment', async ({ page }) => {
+    test.setTimeout(30000);
+    await navigateToBoard(page);
+    await openMarkSelector(page);
+
+    await applyMarkFromSuite(page, 'Checkmarks', 0);
+
+    await openMarkSelector(page);
+    const commentInput = getCommentInput(page);
+    await commentInput.fill('Persistent comment');
+    await page.waitForTimeout(200);
+
+    await closeModal(page);
+
+    await openMarkSelector(page);
+    await page.locator('ion-modal:not(.overlay-hidden) ion-button').filter({ hasText: 'Clear Mark' }).click();
+    await page.waitForTimeout(300);
+    await closeModal(page);
+
+    const calendarDay = page.locator('.calendar-day.current-month').first();
+    const hasMark = await calendarDay.evaluate((el) => el.classList.contains('has-mark'));
+    expect(hasMark).toBe(false);
+
+    const commentFold = page.locator('.calendar-day.current-month .comment-fold').first();
+    await expect(commentFold).toBeVisible();
+
+    await openMarkSelector(page);
+    const commentDisplayAfter = getCommentDisplay(page);
+    await expect(commentDisplayAfter).toContainText('Persistent comment');
+  });
+
+  test('comment persists after navigating away and back', async ({ page }) => {
+    await navigateToBoard(page);
+    await openMarkSelector(page);
+
+    const commentInput = getCommentInput(page);
+    await commentInput.fill('Persistent comment');
+    await page.waitForTimeout(200);
+
+    await closeModal(page);
+
+    await page.locator('ion-back-button').click();
+    await page.waitForSelector('.board-card', { state: 'visible' });
+    await page.waitForTimeout(300);
+
+    await navigateToBoard(page);
+    await openMarkSelector(page);
+
+    const commentDisplayAfter = getCommentDisplay(page);
+    await expect(commentDisplayAfter).toContainText('Persistent comment');
+  });
+
+  test('comment persists after app reload', async ({ page }) => {
+    test.setTimeout(30000);
+    await navigateToBoard(page);
+    await openMarkSelector(page);
+
+    const commentInput = getCommentInput(page);
+    await commentInput.fill('Reload test comment');
+    await page.waitForTimeout(200);
+
+    await closeModal(page);
+    await page.waitForTimeout(500);
+
+    const savedState = await page.evaluate(() => {
+      const state = localStorage.getItem('mark-app-state');
+      if (state) {
+        const parsed = JSON.parse(state);
+        const firstBoard = parsed.boards?.[0];
+        if (firstBoard) {
+          const comments = firstBoard.comments || {};
+          const commentKeys = Object.keys(comments);
+          return { hasBoards: true, commentKeys, firstComment: commentKeys.length > 0 ? comments[commentKeys[0]] : null };
+        }
+      }
+      return { hasBoards: false, commentKeys: [], firstComment: null };
+    });
+
+    expect(savedState.hasBoards).toBe(true);
+    expect(savedState.firstComment).toBe('Reload test comment');
+  });
+
+  test('edit button is visible when comment exists', async ({ page }) => {
+    await navigateToBoard(page);
+    await openMarkSelector(page);
+
+    const commentInput = getCommentInput(page);
+    await commentInput.fill('Test comment');
+    await page.waitForTimeout(200);
+
+    await closeModal(page);
+
+    await openMarkSelector(page);
+    const editBtn = getCommentEditBtn(page);
+    await expect(editBtn).toBeVisible();
+  });
+
+  test('edit button is hidden when in editing mode', async ({ page }) => {
+    await navigateToBoard(page);
+    await openMarkSelector(page);
+
+    const commentInput = getCommentInput(page);
+    await commentInput.fill('Test comment');
+    await page.waitForTimeout(200);
+
+    await closeModal(page);
+
+    await openMarkSelector(page);
+    const editBtn = getCommentEditBtn(page);
+    await editBtn.click();
+    await page.waitForTimeout(300);
+
+    const editBtnAfter = getCommentEditBtn(page);
+    expect(await editBtnAfter.count()).toBe(0);
+  });
+});
+
+test.describe('Import/Export Comments Tests', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/');
+    await page.waitForLoadState('networkidle');
+    await ensureBoardExists(page);
+  });
+
+  test('export data includes comments', async ({ page }) => {
+    test.setTimeout(30000);
+    await navigateToBoard(page);
+    await openMarkSelector(page);
+
+    const commentInput = getCommentInput(page);
+    await commentInput.fill('Test comment for export');
+    await page.waitForTimeout(200);
+    await closeModal(page);
+
+    const savedState = await page.evaluate(() => {
+      const state = localStorage.getItem('mark-app-state');
+      if (state) {
+        const parsed = JSON.parse(state);
+        const firstBoard = parsed.boards?.[0];
+        if (firstBoard) {
+          return {
+            hasBoards: true,
+            comments: firstBoard.comments || {},
+          };
+        }
+      }
+      return { hasBoards: false, comments: {} };
+    });
+
+    expect(savedState.hasBoards).toBe(true);
+    const commentKeys = Object.keys(savedState.comments);
+    expect(commentKeys.length).toBeGreaterThan(0);
+    expect(savedState.comments[commentKeys[0]]).toBe('Test comment for export');
+  });
+
+  test('import data with comments preserves them', async ({ page }) => {
+    test.setTimeout(30000);
+    const today = new Date();
+    const currentMonth = today.getMonth();
+    const currentYear = today.getFullYear();
+    const dateKey1 = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-15`;
+
+    const importData = {
+      version: '2.0.0',
+      exportDate: new Date().toISOString(),
+      boards: [{
+        id: 'test-import-id',
+        name: 'Imported Board with Comments',
+        marks: {},
+        comments: {
+          [dateKey1]: 'Imported comment for 15th',
+        },
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+        recentMarkIds: [],
+      }],
+    };
+
+    await navigateViaMenu(page, 'Import Data');
+    await page.waitForTimeout(500);
+
+    const fileContent = JSON.stringify(importData);
+    await page.locator('input[type="file"]').setInputFiles({
+      name: 'test-import.json',
+      mimeType: 'application/json',
+      buffer: Buffer.from(fileContent),
+    });
+
+    await page.waitForTimeout(500);
+    await page.locator('ion-button:has-text("Import")').click();
+    await page.waitForTimeout(1000);
+
+    await page.goto('/');
+    await page.waitForLoadState('networkidle');
+    await page.waitForSelector('.board-card');
+
+    const importedBoard = page.locator('.board-card', { hasText: 'Imported Board with Comments' });
+    await expect(importedBoard).toBeVisible();
+    await importedBoard.click();
+    await page.waitForSelector('.calendar');
+
+    await page.locator('.calendar-day.current-month', { hasText: '15' }).first().click();
+    await page.waitForSelector('ion-modal:not(.overlay-hidden)');
+
+    const commentDisplay = getCommentDisplay(page);
+    await expect(commentDisplay).toContainText('Imported comment for 15th');
+  });
+
+  test('import data without comments field works correctly', async ({ page }) => {
+    test.setTimeout(30000);
+    const importData = {
+      version: '2.0.0',
+      exportDate: new Date().toISOString(),
+      boards: [{
+        id: 'test-no-comments-id',
+        name: 'Board Without Comments Field',
+        marks: {},
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+        recentMarkIds: [],
+      }],
+    };
+
+    await navigateViaMenu(page, 'Import Data');
+    await page.waitForTimeout(500);
+
+    const fileContent = JSON.stringify(importData);
+    await page.locator('input[type="file"]').setInputFiles({
+      name: 'test-import.json',
+      mimeType: 'application/json',
+      buffer: Buffer.from(fileContent),
+    });
+
+    await page.waitForTimeout(500);
+    await page.locator('ion-button:has-text("Import")').click();
+    await page.waitForTimeout(1000);
+
+    await page.goto('/');
+    await page.waitForLoadState('networkidle');
+    await page.waitForSelector('.board-card');
+
+    const importedBoard = page.locator('.board-card', { hasText: 'Board Without Comments Field' });
+    await expect(importedBoard).toBeVisible();
   });
 });

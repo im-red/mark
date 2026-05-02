@@ -64,6 +64,21 @@ const BoardDetailPage: React.FC<BoardDetailPageProps> = ({ match }) => {
             }
             updateBoard(board.id, { marks: newMarks });
         }
+    };
+
+    const handleSaveComment = (comment: string | null) => {
+        if (board && selectedDate) {
+            const newComments = { ...board.comments };
+            if (comment === null) {
+                delete newComments[selectedDate];
+            } else {
+                newComments[selectedDate] = comment;
+            }
+            updateBoard(board.id, { comments: newComments });
+        }
+    };
+
+    const handleCloseMarkSelector = () => {
         setShowMarkSelector(false);
         setSelectedDate(null);
     };
@@ -183,6 +198,7 @@ const BoardDetailPage: React.FC<BoardDetailPageProps> = ({ match }) => {
                     </div>
                     <Calendar
                         markIds={board.marks}
+                        comments={board.comments}
                         getMarkById={getMark}
                         onDateClick={handleDateClick}
                         onViewDateChange={handleViewDateChange}
@@ -215,11 +231,11 @@ const BoardDetailPage: React.FC<BoardDetailPageProps> = ({ match }) => {
                 isOpen={showMarkSelector}
                 selectedMarkId={selectedDate ? board.marks[selectedDate] || null : null}
                 recentMarkIds={board.recentMarkIds}
+                selectedDate={selectedDate}
+                existingComment={selectedDate ? board.comments[selectedDate] || null : null}
                 onSelect={handleMarkSelect}
-                onClose={() => {
-                    setShowMarkSelector(false);
-                    setSelectedDate(null);
-                }}
+                onSaveComment={handleSaveComment}
+                onClose={handleCloseMarkSelector}
             />
 
             <IonActionSheet
@@ -228,7 +244,6 @@ const BoardDetailPage: React.FC<BoardDetailPageProps> = ({ match }) => {
                 buttons={[
                     {
                         text: 'Rename',
-                        icon: create,
                         handler: () => {
                             setNewName(board.name);
                             setShowRenameModal(true);
@@ -236,12 +251,10 @@ const BoardDetailPage: React.FC<BoardDetailPageProps> = ({ match }) => {
                     },
                     {
                         text: 'Export as Image',
-                        icon: image,
                         handler: handleExportImage,
                     },
                     {
                         text: 'Delete',
-                        icon: trash,
                         role: 'destructive',
                         handler: () => {
                             setShowDeleteAlert(true);

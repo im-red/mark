@@ -8,6 +8,7 @@ type ViewMode = 'month' | 'year';
 
 interface CalendarProps {
   markIds: Record<string, string>;
+  comments: Record<string, string>;
   getMarkById: (markId: string) => Mark | undefined;
   onDateClick: (dateKey: string) => void;
   onViewDateChange?: (year: number, month: number, viewMode: ViewMode) => void;
@@ -49,7 +50,7 @@ const getMiniMonthDays = (year: number, month: number): MiniMonthDays => {
   return { days, startDayOfWeek };
 };
 
-const Calendar: React.FC<CalendarProps> = ({ markIds, getMarkById, onDateClick, onViewDateChange }) => {
+const Calendar: React.FC<CalendarProps> = ({ markIds, comments, getMarkById, onDateClick, onViewDateChange }) => {
   const today = new Date();
   const [viewDate, setViewDate] = useState({
     year: today.getFullYear(),
@@ -187,17 +188,21 @@ const Calendar: React.FC<CalendarProps> = ({ markIds, getMarkById, onDateClick, 
             {calendarDays.map((dateInfo, index) => {
               const markId = markIds[dateInfo.dateKey];
               const mark = markId ? getMarkById(markId) : undefined;
+              const hasComment = !!comments[dateInfo.dateKey];
               const isToday = dateInfo.dateKey === todayKey;
               const isWeekend = index % 7 === 0 || index % 7 === 6;
 
               return (
                 <div
                   key={index}
-                  className={`calendar-day ${dateInfo.isCurrentMonth ? 'current-month' : 'other-month'} ${isToday ? 'today' : ''} ${mark ? 'has-mark' : ''} ${isWeekend ? 'weekend' : ''}`}
-                  style={mark ? { backgroundColor: mark.backgroundColor } : undefined}
+                  className={`calendar-day ${dateInfo.isCurrentMonth ? 'current-month' : 'other-month'} ${isToday ? 'today' : ''} ${mark ? 'has-mark' : ''} ${isWeekend ? 'weekend' : ''} ${hasComment ? 'has-comment' : ''}`}
+                  style={mark ? { backgroundColor: mark.backgroundColor } : hasComment ? { backgroundColor: 'var(--surface)' } : undefined}
                   onClick={() => onDateClick(dateInfo.dateKey)}
                 >
-                  <span className="day-number">{dateInfo.day}</span>
+                  <div className="day-header">
+                    <span className="day-number">{dateInfo.day}</span>
+                  </div>
+                  {hasComment && <div className="comment-fold" />}
                   {mark && (
                     <span className="day-mark">
                       {mark.emojis.join('')}

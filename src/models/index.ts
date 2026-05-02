@@ -17,6 +17,7 @@ export interface Board {
     id: string;
     name: string;
     marks: Record<string, string>;
+    comments: Record<string, string>;
     recentMarkIds: string[];
     createdAt: number;
     updatedAt: number;
@@ -73,6 +74,7 @@ export const createDefaultBoard = (): Board => ({
     id: generateId(),
     name: 'My Board',
     marks: {},
+    comments: {},
     recentMarkIds: [],
     createdAt: Date.now(),
     updatedAt: Date.now(),

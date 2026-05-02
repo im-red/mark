@@ -22,7 +22,8 @@ const isValidBoard = (board: unknown): board is Board => {
     typeof b.name === 'string' &&
     typeof b.marks === 'object' &&
     typeof b.createdAt === 'number' &&
-    typeof b.updatedAt === 'number'
+    typeof b.updatedAt === 'number' &&
+    (b.comments === undefined || typeof b.comments === 'object')
   );
 };
 
@@ -104,6 +105,7 @@ export const mergeImportedBoards = (
       id: crypto.randomUUID ? crypto.randomUUID() : `import-${Date.now()}-${Math.random().toString(36).slice(2)}`,
       name,
       recentMarkIds: board.recentMarkIds || [],
+      comments: board.comments || {},
     });
   }
 

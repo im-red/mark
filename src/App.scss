@@ -44,3 +44,11 @@ ion-list.edge-to-edge ion-item {
     gap: 6px;
   }
 }
+
+.action-sheet-button.action-sheet-destructive {
+  color: var(--error);
+}
+
+.action-sheet-button.action-sheet-cancel {
+  color: var(--text-secondary);
+}

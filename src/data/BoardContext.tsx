@@ -7,11 +7,13 @@ interface BoardContextValue {
   currentBoard: Board | null;
   currentBoardId: string | null;
   createBoard: (name: string) => Board;
-  updateBoard: (id: string, updates: Partial<Pick<Board, 'name' | 'marks' | 'recentMarkIds'>>) => void;
+  updateBoard: (id: string, updates: Partial<Pick<Board, 'name' | 'marks' | 'comments' | 'recentMarkIds'>>) => void;
   deleteBoard: (id: string) => void;
   switchBoard: (id: string) => void;
   setMark: (dateKey: string, markId: string | null) => void;
   getMark: (dateKey: string) => string | null;
+  setComment: (dateKey: string, comment: string | null) => void;
+  getComment: (dateKey: string) => string | null;
   updateRecentMarks: (markId: string) => void;
   importBoards: (boards: Board[]) => void;
 }
@@ -29,7 +31,10 @@ const getDefaultState = (): AppState => ({
 export const BoardProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [appState, setAppState] = useLocalStorageState<AppState>(STORAGE_KEY, getDefaultState());
 
-  const boards = appState.boards;
+  const boards = appState.boards.map(b => ({
+    ...b,
+    comments: b.comments || {},
+  }));
   const currentBoardId = appState.currentBoardId || (boards[0]?.id ?? null);
   const currentBoard = boards.find((b) => b.id === currentBoardId) ?? null;
 
@@ -48,7 +53,7 @@ export const BoardProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   );
 
   const updateBoard = useCallback(
-    (id: string, updates: Partial<Pick<Board, 'name' | 'marks' | 'recentMarkIds'>>) => {
+    (id: string, updates: Partial<Pick<Board, 'name' | 'marks' | 'comments' | 'recentMarkIds'>>) => {
       setAppState((prev) => ({
         ...prev,
         boards: prev.boards.map((b) =>
@@ -129,6 +134,36 @@ export const BoardProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     [currentBoard]
   );
 
+  const setComment = useCallback(
+    (dateKey: string, comment: string | null) => {
+      setAppState((prev) => ({
+        ...prev,
+        boards: prev.boards.map((b) => {
+          if (b.id !== currentBoardId) return b;
+          const newComments = { ...b.comments };
+          if (comment === null || comment.trim() === '') {
+            delete newComments[dateKey];
+          } else {
+            newComments[dateKey] = comment;
+          }
+          return {
+            ...b,
+            comments: newComments,
+            updatedAt: Date.now(),
+          };
+        }),
+      }));
+    },
+    [currentBoardId, setAppState]
+  );
+
+  const getComment = useCallback(
+    (dateKey: string): string | null => {
+      return currentBoard?.comments[dateKey] ?? null;
+    },
+    [currentBoard]
+  );
+
   const updateRecentMarks = useCallback(
     (markId: string) => {
       if (!currentBoardId) return;
@@ -169,6 +204,8 @@ export const BoardProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       switchBoard,
       setMark,
       getMark,
+      setComment,
+      getComment,
       updateRecentMarks,
       importBoards,
     }),
@@ -182,6 +219,8 @@ export const BoardProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       switchBoard,
       setMark,
       getMark,
+      setComment,
+      getComment,
       updateRecentMarks,
       importBoards,
     ]

@@ -54,6 +54,7 @@
 }
 
 .calendar-day {
+  position: relative;
   background: var(--background);
   min-height: 56px;
   padding: 4px 2px;
@@ -86,11 +87,43 @@
   border-radius: 14px;
 }
 
+.day-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  gap: 2px;
+}
+
 .day-number {
   font-size: 0.8rem;
   font-weight: 500;
-  margin-bottom: 1px;
+  margin-bottom: 0.25rem;
   color: var(--text-muted);
+}
+
+.comment-fold {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-width: 0 12px 12px 0;
+  border-color: transparent var(--surface) transparent transparent;
+  border-radius: 0 12px 0 0;
+}
+
+.comment-fold::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: -12px;
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-width: 12px 0 0 12px;
+  border-color: transparent transparent transparent rgba(0, 0, 0, 0.1);
 }
 
 .calendar-day.current-month .day-number {

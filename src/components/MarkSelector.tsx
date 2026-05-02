@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import {
   IonModal,
   IonHeader,
@@ -9,7 +9,10 @@ import {
   IonContent,
   IonSelect,
   IonSelectOption,
+  IonTextarea,
+  IonIcon,
 } from '@ionic/react';
+import { create } from 'ionicons/icons';
 import { Mark, RECENT_SUITE_ID } from '../models';
 import { useMarkSuite } from '../data/MarkSuiteContext';
 import './MarkSelector.scss';
@@ -18,7 +21,10 @@ interface MarkSelectorProps {
   isOpen: boolean;
   selectedMarkId: string | null;
   recentMarkIds: string[];
+  selectedDate: string | null;
+  existingComment: string | null;
   onSelect: (markId: string | null) => void;
+  onSaveComment: (comment: string | null) => void;
   onClose: () => void;
 }
 
@@ -26,7 +32,10 @@ const MarkSelector: React.FC<MarkSelectorProps> = ({
   isOpen,
   selectedMarkId,
   recentMarkIds,
+  selectedDate,
+  existingComment,
   onSelect,
+  onSaveComment,
   onClose,
 }) => {
   const { suites, getRecentSuite } = useMarkSuite();
@@ -34,6 +43,28 @@ const MarkSelector: React.FC<MarkSelectorProps> = ({
   const [selectedSuiteId, setSelectedSuiteId] = useState<string>(
     availableSuites.length > 0 ? availableSuites[0].id : ''
   );
+
+  const [isEditingComment, setIsEditingComment] = useState(false);
+  const [comment, setComment] = useState('');
+  const prevIsOpen = useRef(isOpen);
+  const commentInputRef = useRef<HTMLIonTextareaElement>(null);
+
+  useEffect(() => {
+    if (isOpen && !prevIsOpen.current) {
+      const hasExistingComment = existingComment && existingComment.trim().length > 0;
+      setIsEditingComment(!hasExistingComment);
+      setComment(existingComment || '');
+    }
+    prevIsOpen.current = isOpen;
+  }, [isOpen, existingComment]);
+
+  const handleModalClose = () => {
+    const trimmedComment = comment.trim() || null;
+    if (trimmedComment !== existingComment) {
+      onSaveComment(trimmedComment);
+    }
+    onClose();
+  };
 
   const recentSuite = useMemo(() => getRecentSuite(recentMarkIds), [getRecentSuite, recentMarkIds]);
 
@@ -43,25 +74,65 @@ const MarkSelector: React.FC<MarkSelectorProps> = ({
 
   const handleMarkSelect = (mark: Mark) => {
     onSelect(mark.id);
-    onClose();
   };
 
   const handleClear = () => {
     onSelect(null);
-    onClose();
+  };
+
+  const handleEditToggle = () => {
+    setIsEditingComment(true);
+    setTimeout(async () => {
+      await commentInputRef.current?.setFocus();
+      const nativeEl = await commentInputRef.current?.getInputElement();
+      if (nativeEl && comment) {
+        const len = comment.length;
+        nativeEl.setSelectionRange(len, len);
+      }
+    }, 50);
+  };
+
+  const formatDate = (dateKey: string | null) => {
+    if (!dateKey) return '';
+    const [year, month, day] = dateKey.split('-');
+    const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+    return date.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
   };
 
   return (
-    <IonModal isOpen={isOpen} onDidDismiss={onClose} breakpoints={[0, 0.5, 0.75, 1]} initialBreakpoint={0.75}>
+    <IonModal isOpen={isOpen} onDidDismiss={handleModalClose} breakpoints={[0, 0.5, 0.75, 1]} initialBreakpoint={0.75}>
       <IonHeader>
         <IonToolbar>
-          <IonTitle>Select Mark</IonTitle>
+          <IonTitle>{formatDate(selectedDate)}</IonTitle>
           <IonButtons slot="end">
-            <IonButton onClick={onClose}>Close</IonButton>
+            <IonButton onClick={handleModalClose}>Close</IonButton>
           </IonButtons>
         </IonToolbar>
       </IonHeader>
       <IonContent className="ion-padding">
+        <div className="mark-section">
+          <div className="comment-section">
+            {isEditingComment ? (
+              <IonTextarea
+                ref={commentInputRef}
+                className="comment-input"
+                placeholder="Add a comment (optional)"
+                value={comment}
+                onIonInput={(e) => setComment(e.detail.value || '')}
+                autoGrow
+                rows={1}
+              />
+            ) : (
+              <div className="comment-display">
+                <span className="comment-text">{comment}</span>
+                <IonButton fill="clear" size="small" className="comment-edit-btn" onClick={handleEditToggle}>
+                  <IonIcon slot="icon-only" icon={create} />
+                </IonButton>
+              </div>
+            )}
+          </div>
+        </div>
+
         <div className="mark-section">
           <h4>Recent Marks</h4>
           <div className="mark-grid">
