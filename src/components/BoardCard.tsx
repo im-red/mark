@@ -4,8 +4,8 @@ import {
   IonCardHeader,
   IonCardTitle,
   IonCardSubtitle,
-  IonIcon,
 } from '@ionic/react';
+import { Mark } from '../models';
 import './BoardCard.scss';
 
 interface BoardCardProps {
@@ -13,6 +13,7 @@ interface BoardCardProps {
   name: string;
   markCount: number;
   lastUpdated: number;
+  recentMarks: Mark[];
   onClick: (id: string) => void;
 }
 
@@ -21,6 +22,7 @@ const BoardCard: React.FC<BoardCardProps> = ({
   name,
   markCount,
   lastUpdated,
+  recentMarks,
   onClick,
 }) => {
   const formatDate = (timestamp: number): string => {
@@ -43,10 +45,27 @@ const BoardCard: React.FC<BoardCardProps> = ({
   return (
     <IonCard button onClick={() => onClick(id)} className="board-card">
       <IonCardHeader>
-        <IonCardTitle>{name}</IonCardTitle>
-        <IonCardSubtitle>
-          {markCount} marks · {formatDate(lastUpdated)}
-        </IonCardSubtitle>
+        <div className="board-card__content">
+          <div className="board-card__info">
+            <IonCardTitle>{name}</IonCardTitle>
+            <IonCardSubtitle>
+              {markCount} marks · {formatDate(lastUpdated)}
+            </IonCardSubtitle>
+          </div>
+          {recentMarks.length > 0 && (
+            <div className="board-card__recent-marks">
+              {recentMarks.map((mark) => (
+                <span
+                  key={mark.id}
+                  className="board-card__recent-mark"
+                  title={mark.name}
+                >
+                  {mark.emojis.join('')}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
       </IonCardHeader>
     </IonCard>
   );

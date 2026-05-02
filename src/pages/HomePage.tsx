@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
     IonPage,
     IonHeader,
@@ -19,11 +19,13 @@ import {
 import { add } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
 import { useBoard } from '../data/BoardContext';
+import { useMarkSuite } from '../data/MarkSuiteContext';
 import BoardCard from '../components/BoardCard';
 import './HomePage.scss';
 
 const HomePage: React.FC = () => {
     const { boards, createBoard } = useBoard();
+    const { getMark } = useMarkSuite();
     const history = useHistory();
     const [showNewBoardModal, setShowNewBoardModal] = useState(false);
     const [newBoardName, setNewBoardName] = useState('');
@@ -42,6 +44,12 @@ const HomePage: React.FC = () => {
     };
 
     const sortedBoards = [...boards].sort((a, b) => b.updatedAt - a.updatedAt);
+
+    const getRecentMarks = (recentMarkIds: string[]) => {
+        return recentMarkIds
+            .map(markId => getMark(markId))
+            .filter((mark): mark is NonNullable<typeof mark> => mark !== undefined);
+    };
 
     return (
         <IonPage>
@@ -81,6 +89,7 @@ const HomePage: React.FC = () => {
                                 name={board.name}
                                 markCount={Object.keys(board.marks).length}
                                 lastUpdated={board.updatedAt}
+                                recentMarks={getRecentMarks(board.recentMarkIds)}
                                 onClick={handleSelectBoard}
                             />
                         ))}

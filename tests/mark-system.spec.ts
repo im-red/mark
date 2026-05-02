@@ -452,3 +452,184 @@ test.describe('Recent Marks Tests', () => {
     expect(bgColor).not.toBe('rgb(255, 255, 255)');
   });
 });
+
+test.describe('Per-Board Recent Marks Tests', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/');
+    await page.waitForLoadState('networkidle');
+  });
+
+  async function createBoardViaFab(page: Page, name: string) {
+    await page.locator('ion-fab-button').click();
+    await page.waitForSelector('ion-modal:not(.overlay-hidden)', { state: 'visible' });
+    await page.waitForTimeout(300);
+    await page.locator('ion-input input').fill(name);
+    await page.waitForTimeout(200);
+    await page.locator('ion-button').filter({ hasText: /^Create$/ }).click();
+    await page.waitForSelector('.calendar', { state: 'visible' });
+  }
+
+  async function goBackToHome(page: Page) {
+    await page.locator('ion-back-button').click();
+    await page.waitForSelector('.board-card', { state: 'visible' });
+    await page.waitForTimeout(300);
+  }
+
+  async function openBoardByName(page: Page, boardName: string) {
+    await page.locator('.board-card').filter({ hasText: boardName }).first().click();
+    await page.waitForSelector('.calendar');
+    await page.waitForTimeout(300);
+  }
+
+  test('recent marks are isolated per board', async ({ page }) => {
+    await createBoardViaFab(page, 'Board A');
+    await openMarkSelector(page);
+    await applyMarkFromSuite(page, 'Checkmarks', 0);
+    await goBackToHome(page);
+
+    await createBoardViaFab(page, 'Board B');
+    await openMarkSelector(page);
+    await applyMarkFromSuite(page, 'Mood', 0);
+    await goBackToHome(page);
+
+    await openBoardByName(page, 'Board A');
+    await openMarkSelector(page);
+    const recentSectionA = getRecentSection(page);
+    const recentBtnsA = recentSectionA.locator('.mark-btn');
+    expect(await recentBtnsA.count()).toBe(1);
+    const markTextA = await recentBtnsA.first().textContent();
+    console.log('Board A recent mark:', markTextA);
+    expect(markTextA).toContain('✓');
+
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(300);
+    await goBackToHome(page);
+
+    await openBoardByName(page, 'Board B');
+    await openMarkSelector(page);
+    const recentSectionB = getRecentSection(page);
+    const recentBtnsB = recentSectionB.locator('.mark-btn');
+    expect(await recentBtnsB.count()).toBe(1);
+    const markTextB = await recentBtnsB.first().textContent();
+    console.log('Board B recent mark:', markTextB);
+    expect(markTextB).toContain('😣');
+  });
+
+  test('applying mark on one board does not affect another board recent marks', async ({ page }) => {
+    await createBoardViaFab(page, 'First Board');
+    await openMarkSelector(page);
+    await applyMarkFromSuite(page, 'Checkmarks', 0);
+    await openMarkSelector(page);
+    await applyMarkFromSuite(page, 'Mood', 1);
+    await goBackToHome(page);
+
+    await createBoardViaFab(page, 'Second Board');
+    await openMarkSelector(page);
+    await applyMarkFromSuite(page, 'Numbers 0-10', 5);
+    await goBackToHome(page);
+
+    await openBoardByName(page, 'First Board');
+    await openMarkSelector(page);
+    const recentSectionFirst = getRecentSection(page);
+    const recentBtnsFirst = recentSectionFirst.locator('.mark-btn');
+    expect(await recentBtnsFirst.count()).toBe(2);
+    const firstMarkText = await recentBtnsFirst.first().textContent();
+    console.log('First Board - most recent mark:', firstMarkText);
+    expect(firstMarkText).toContain('😔');
+    const secondMarkText = await recentBtnsFirst.nth(1).textContent();
+    console.log('First Board - second recent mark:', secondMarkText);
+    expect(secondMarkText).toContain('✓');
+
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(300);
+    await goBackToHome(page);
+
+    await openBoardByName(page, 'Second Board');
+    await openMarkSelector(page);
+    const recentSectionSecond = getRecentSection(page);
+    const recentBtnsSecond = recentSectionSecond.locator('.mark-btn');
+    expect(await recentBtnsSecond.count()).toBe(1);
+    const secondBoardMarkText = await recentBtnsSecond.first().textContent();
+    console.log('Second Board - recent mark:', secondBoardMarkText);
+    expect(secondBoardMarkText).toContain('5️⃣');
+  });
+
+  test('each board maintains its own recent marks order', async ({ page }) => {
+    test.setTimeout(30000);
+    await createBoardViaFab(page, 'Alpha Board');
+    await openMarkSelector(page);
+    await applyMarkFromSuite(page, 'Mood', 0);
+    await openMarkSelector(page);
+    await applyMarkFromSuite(page, 'Mood', 4);
+    await openMarkSelector(page);
+    await applyMarkFromSuite(page, 'Checkmarks', 2);
+    await goBackToHome(page);
+
+    await createBoardViaFab(page, 'Beta Board');
+    await openMarkSelector(page);
+    await applyMarkFromSuite(page, 'Checkmarks', 0);
+    await openMarkSelector(page);
+    await applyMarkFromSuite(page, 'Checkmarks', 1);
+    await goBackToHome(page);
+
+    await openBoardByName(page, 'Alpha Board');
+    await openMarkSelector(page);
+    const recentSectionAlpha = getRecentSection(page);
+    const recentBtnsAlpha = recentSectionAlpha.locator('.mark-btn');
+    expect(await recentBtnsAlpha.count()).toBe(3);
+    const alphaMarks = await recentBtnsAlpha.allTextContents();
+    console.log('Alpha Board recent marks order:', alphaMarks);
+    expect(alphaMarks[0]).toContain('?');
+    expect(alphaMarks[1]).toContain('😄');
+    expect(alphaMarks[2]).toContain('😣');
+
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(300);
+    await goBackToHome(page);
+
+    await openBoardByName(page, 'Beta Board');
+    await openMarkSelector(page);
+    const recentSectionBeta = getRecentSection(page);
+    const recentBtnsBeta = recentSectionBeta.locator('.mark-btn');
+    expect(await recentBtnsBeta.count()).toBe(2);
+    const betaMarks = await recentBtnsBeta.allTextContents();
+    console.log('Beta Board recent marks order:', betaMarks);
+    expect(betaMarks[0]).toContain('✗');
+    expect(betaMarks[1]).toContain('✓');
+  });
+
+  test('new board has empty recent marks', async ({ page }) => {
+    await createBoardViaFab(page, 'Brand New Board');
+    await openMarkSelector(page);
+    const recentSection = getRecentSection(page);
+    const emptyMsg = recentSection.locator('.mark-grid__empty');
+    await expect(emptyMsg).toBeVisible();
+    await expect(emptyMsg).toHaveText('No recent marks.');
+    const recentBtns = recentSection.locator('.mark-btn');
+    expect(await recentBtns.count()).toBe(0);
+  });
+
+  test('recent marks persist after switching boards', async ({ page }) => {
+    await createBoardViaFab(page, 'Persistent Board');
+    await openMarkSelector(page);
+    await applyMarkFromSuite(page, 'Mood', 2);
+    await openMarkSelector(page);
+    await applyMarkFromSuite(page, 'Checkmarks', 0);
+    await goBackToHome(page);
+
+    await createBoardViaFab(page, 'Temp Board');
+    await openMarkSelector(page);
+    await applyMarkFromSuite(page, 'Mood', 3);
+    await goBackToHome(page);
+
+    await openBoardByName(page, 'Persistent Board');
+    await openMarkSelector(page);
+    const recentSection = getRecentSection(page);
+    const recentBtns = recentSection.locator('.mark-btn');
+    expect(await recentBtns.count()).toBe(2);
+    const marks = await recentBtns.allTextContents();
+    console.log('Persistent Board recent marks after switch:', marks);
+    expect(marks[0]).toContain('✓');
+    expect(marks[1]).toContain('😐');
+  });
+});
