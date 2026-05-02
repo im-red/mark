@@ -1,3 +1,10 @@
+## [v1.2.1] - 2026-05-02
+
+### Improvements
+
+- **Code Organization** - Split component-specific CSS into separate files for better maintainability and faster development
+- **UI Refinements** - Adjusted UI layouts and styling across multiple pages for improved consistency
+
 ## [v1.2.0] - 2026-05-02
 
 ### New Features
