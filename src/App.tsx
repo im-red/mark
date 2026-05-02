@@ -1,10 +1,12 @@
 import React from 'react';
-import { Route, useHistory } from 'react-router-dom';
+import { Route } from 'react-router-dom';
 import {
   IonApp,
   IonRouterOutlet,
   setupIonicReact,
 } from '@ionic/react';
+import { BackButtonEvent } from '@ionic/core';
+import { useIonRouter } from '@ionic/react';
 import { IonReactRouter } from '@ionic/react-router';
 import { SplashScreen } from '@capacitor/splash-screen';
 import { App as CapacitorApp } from '@capacitor/app';
@@ -26,9 +28,33 @@ setupIonicReact({
   mode: 'md',
 });
 
-const App: React.FC = () => {
-  const history = useHistory();
+// Component that handles back button - must be inside IonReactRouter
+const BackButtonHandler: React.FC = () => {
+  const ionRouter = useIonRouter();
 
+  React.useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return;
+
+    const handleBackButton = (event: Event) => {
+      const backButtonEvent = event as BackButtonEvent;
+      backButtonEvent.detail.register(-1, () => {
+        if (!ionRouter.canGoBack()) {
+          CapacitorApp.exitApp();
+        }
+      });
+    };
+
+    document.addEventListener('ionBackButton', handleBackButton);
+
+    return () => {
+      document.removeEventListener('ionBackButton', handleBackButton);
+    };
+  }, [ionRouter]);
+
+  return null;
+};
+
+const App: React.FC = () => {
   React.useEffect(() => {
     const hideSplash = async () => {
       try {
@@ -40,30 +66,12 @@ const App: React.FC = () => {
     hideSplash();
   }, []);
 
-  React.useEffect(() => {
-    if (!Capacitor.isNativePlatform()) return;
-
-    const backButtonHandler = CapacitorApp.addListener(
-      'backButton',
-      ({ canGoBack }) => {
-        if (canGoBack) {
-          history.goBack();
-        } else {
-          CapacitorApp.exitApp();
-        }
-      }
-    );
-
-    return () => {
-      backButtonHandler.then(handler => handler.remove());
-    };
-  }, [history]);
-
   return (
     <IonApp>
       <BoardProvider>
         <MarkSuiteProvider>
           <IonReactRouter>
+            <BackButtonHandler />
             <SideMenu />
             <IonRouterOutlet id="main">
               <Route exact path="/" component={HomePage} />
