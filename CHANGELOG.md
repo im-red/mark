@@ -1,3 +1,13 @@
+## [v1.3.1] - 2026-05-02
+
+### Improvements
+
+- **UI Updates** - Minor styling adjustments to board cards, about page, and board detail page for better visual consistency
+
+### Fixes
+
+- **Back Key Navigation** - Fixed back key handling issue for proper navigation behavior on Android devices
+
 ## [v1.3.0] - 2026-05-02
 
 ### New Features
