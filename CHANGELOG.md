@@ -1,3 +1,13 @@
+## [v1.3.2] - 2026-05-03
+
+### New Features
+
+- **Clear Recent Marks** - Support for clearing recently used marks
+
+### Fixes
+
+- **UI Issues** - Fixed minor UI issues
+
 ## [v1.3.1] - 2026-05-02
 
 ### Improvements
