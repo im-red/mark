@@ -25,6 +25,7 @@ interface MarkSelectorProps {
   existingComment: string | null;
   onSelect: (markId: string | null) => void;
   onSaveComment: (comment: string | null) => void;
+  onClearRecentMarks?: () => void;
   onClose: () => void;
 }
 
@@ -36,6 +37,7 @@ const MarkSelector: React.FC<MarkSelectorProps> = ({
   existingComment,
   onSelect,
   onSaveComment,
+  onClearRecentMarks,
   onClose,
 }) => {
   const { suites, getRecentSuite } = useMarkSuite();
@@ -134,7 +136,14 @@ const MarkSelector: React.FC<MarkSelectorProps> = ({
         </div>
 
         <div className="mark-section">
-          <h4>Recent Marks</h4>
+          <div className="mark-section-header">
+            <h4>Recent Marks</h4>
+            {recentSuite.marks.length > 0 && onClearRecentMarks && (
+              <IonButton fill="clear" size="small" color="medium" onClick={onClearRecentMarks}>
+                Clear
+              </IonButton>
+            )}
+          </div>
           <div className="mark-grid">
             {recentSuite.marks.map(mark => {
               const emojiText = mark.emojis.join('');
@@ -162,7 +171,9 @@ const MarkSelector: React.FC<MarkSelectorProps> = ({
         </div>
 
         <div className="mark-section">
-          <h4>Mark Suites</h4>
+          <div className="mark-section-header">
+            <h4>Mark Suites</h4>
+          </div>
           <IonSelect
             interface="popover"
             value={selectedSuiteId}

@@ -474,6 +474,29 @@ test.describe('Recent Marks Tests', () => {
     expect(bgColor).not.toBe('rgba(0, 0, 0, 0)');
     expect(bgColor).not.toBe('rgb(255, 255, 255)');
   });
+
+  test('clear recent marks button works', async ({ page }) => {
+    await navigateToBoard(page);
+
+    await openMarkSelector(page);
+    await applyMarkFromSuite(page, 'Checkmarks', 0);
+
+    await openMarkSelector(page);
+    const recentSection = getRecentSection(page);
+    const recentBtns = recentSection.locator('.mark-btn');
+    expect(await recentBtns.count()).toBe(1);
+
+    const clearBtn = recentSection.locator('ion-button').filter({ hasText: 'Clear' });
+    await expect(clearBtn).toBeVisible();
+    await clearBtn.click();
+    await page.waitForTimeout(300);
+
+    const emptyMsg = recentSection.locator('.mark-grid__empty');
+    await expect(emptyMsg).toBeVisible();
+    await expect(emptyMsg).toHaveText('No recent marks.');
+    expect(await recentBtns.count()).toBe(0);
+    await expect(clearBtn).not.toBeVisible();
+  });
 });
 
 test.describe('Per-Board Recent Marks Tests', () => {

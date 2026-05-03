@@ -6,11 +6,23 @@
   margin-bottom: 0;
 }
 
-.mark-section h4 {
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: var(--text-main);
+.mark-section .mark-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   margin-bottom: 0.5rem;
+
+  h4 {
+    font-size: 0.875rem;
+    font-weight: 600;
+    margin-top: 0.2rem;
+    margin-bottom: 0;
+  }
+
+  ion-button {
+    margin-top: 0.2rem;
+    margin-bottom: 0;
+  }
 }
 
 .comment-section {

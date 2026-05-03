@@ -83,6 +83,12 @@ const BoardDetailPage: React.FC<BoardDetailPageProps> = ({ match }) => {
         setSelectedDate(null);
     };
 
+    const handleClearRecentMarks = () => {
+        if (board) {
+            updateBoard(board.id, { recentMarkIds: [] });
+        }
+    };
+
     const handleRename = () => {
         if (board && newName.trim()) {
             updateBoard(board.id, { name: newName.trim() });
@@ -235,6 +241,7 @@ const BoardDetailPage: React.FC<BoardDetailPageProps> = ({ match }) => {
                 existingComment={selectedDate ? board.comments[selectedDate] || null : null}
                 onSelect={handleMarkSelect}
                 onSaveComment={handleSaveComment}
+                onClearRecentMarks={handleClearRecentMarks}
                 onClose={handleCloseMarkSelector}
             />
 
