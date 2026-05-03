@@ -45,10 +45,10 @@ ion-list.edge-to-edge ion-item {
   }
 }
 
-.action-sheet-button.action-sheet-destructive {
+.action-sheet-container .action-sheet-button.action-sheet-destructive {
   color: var(--error);
 }
 
-.action-sheet-button.action-sheet-cancel {
+.action-sheet-container .action-sheet-button.action-sheet-cancel {
   color: var(--text-secondary);
 }
