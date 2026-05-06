@@ -29,7 +29,7 @@ const BoardSelector: React.FC = () => {
 
   const handleSaveEdit = (id: string) => {
     if (editName.trim()) {
-      updateBoard(id, editName.trim());
+      updateBoard(id, { name: editName.trim() });
     }
     setEditingId(null);
     setEditName('');

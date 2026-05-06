@@ -16,10 +16,10 @@ import {
     IonList,
     IonIcon,
 } from '@ionic/react';
-import { ellipsisVertical, create, trash, image } from 'ionicons/icons';
+import { ellipsisVertical } from 'ionicons/icons';
 import Calendar from '../components/Calendar';
 import MarkSelector from '../components/MarkSelector';
-import { Board, Mark } from '../models';
+import { Mark } from '../models';
 import { useMarkSuite } from '../data/MarkSuiteContext';
 import { useBoard } from '../data/BoardContext';
 import { exportViewAsImage } from '../util/exportImage';
@@ -31,7 +31,7 @@ interface BoardDetailPageProps {
 
 const BoardDetailPage: React.FC<BoardDetailPageProps> = ({ match }) => {
     const boardId = match?.params.id;
-    const { boards, updateBoard, deleteBoard, updateRecentMarks } = useBoard();
+    const { boards, updateBoard, deleteBoard } = useBoard();
     const { getMark } = useMarkSuite();
     const board = boards.find(b => b.id === boardId);
 
@@ -56,13 +56,16 @@ const BoardDetailPage: React.FC<BoardDetailPageProps> = ({ match }) => {
     const handleMarkSelect = (markId: string | null) => {
         if (board && selectedDate) {
             const newMarks = { ...board.marks };
+            let newRecentMarkIds = board.recentMarkIds;
+
             if (markId === null) {
                 delete newMarks[selectedDate];
             } else {
                 newMarks[selectedDate] = markId;
-                updateRecentMarks(markId);
+                const filtered = board.recentMarkIds.filter(id => id !== markId);
+                newRecentMarkIds = [markId, ...filtered].slice(0, 5);
             }
-            updateBoard(board.id, { marks: newMarks });
+            updateBoard(board.id, { marks: newMarks, recentMarkIds: newRecentMarkIds });
         }
     };
 

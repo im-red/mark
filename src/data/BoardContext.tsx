@@ -14,7 +14,6 @@ interface BoardContextValue {
   getMark: (dateKey: string) => string | null;
   setComment: (dateKey: string, comment: string | null) => void;
   getComment: (dateKey: string) => string | null;
-  updateRecentMarks: (markId: string) => void;
   importBoards: (boards: Board[]) => void;
 }
 
@@ -164,25 +163,6 @@ export const BoardProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     [currentBoard]
   );
 
-  const updateRecentMarks = useCallback(
-    (markId: string) => {
-      if (!currentBoardId) return;
-      setAppState((prev) => ({
-        ...prev,
-        boards: prev.boards.map((b) => {
-          if (b.id !== currentBoardId) return b;
-          const filtered = b.recentMarkIds.filter(id => id !== markId);
-          const newRecent = [markId, ...filtered].slice(0, 5);
-          return {
-            ...b,
-            recentMarkIds: newRecent,
-          };
-        }),
-      }));
-    },
-    [currentBoardId, setAppState]
-  );
-
   const importBoards = useCallback(
     (newBoards: Board[]) => {
       setAppState((prev) => ({
@@ -206,7 +186,6 @@ export const BoardProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       getMark,
       setComment,
       getComment,
-      updateRecentMarks,
       importBoards,
     }),
     [
@@ -221,7 +200,6 @@ export const BoardProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       getMark,
       setComment,
       getComment,
-      updateRecentMarks,
       importBoards,
     ]
   );
