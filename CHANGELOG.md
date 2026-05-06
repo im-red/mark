@@ -1,3 +1,10 @@
+## [v1.3.3] - 2026-05-06
+
+### Fixes
+
+- **Recent Marks** - Fixed an issue where wrong recent marks were displayed when multiple boards existed
+- **UI Adjustments** - Fixed minor UI issues
+
 ## [v1.3.2] - 2026-05-03
 
 ### New Features
