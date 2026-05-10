@@ -1,3 +1,9 @@
+## [v1.3.4] - 2026-05-10
+
+### New Features
+
+- **Board Card** - Show the last marked day on board card
+
 ## [v1.3.3] - 2026-05-06
 
 ### Fixes
