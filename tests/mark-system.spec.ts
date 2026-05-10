@@ -1203,3 +1203,91 @@ test.describe('Import/Export Comments Tests', () => {
     await expect(importedBoard).toBeVisible();
   });
 });
+
+test.describe('Board Card Last Marked Day Display', () => {
+  // Helper to generate YYYY-MM-DD
+  const getOffsetDateString = (offsetDays: number) => {
+    const d = new Date();
+    d.setDate(d.getDate() + offsetDays);
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+  };
+
+  async function setupBoardWithMarks(page: Page, boardName: string, markDates: string[]) {
+    await page.goto('/');
+    await page.waitForLoadState('networkidle');
+    await page.evaluate(({ boardName, markDates }) => {
+      const marksObj: Record<string, string> = {};
+      markDates.forEach((date, i) => {
+        marksObj[date] = `mark-${i}`;
+      });
+      const state = {
+        boards: [{
+          id: 'test-board',
+          name: boardName,
+          marks: marksObj,
+          comments: {},
+          recentMarkIds: [],
+          createdAt: Date.now(),
+          updatedAt: Date.now()
+        }],
+        markSuites: [],
+        currentBoardId: null
+      };
+      localStorage.setItem('mark-app-state', JSON.stringify(state));
+    }, { boardName, markDates });
+    await page.reload();
+    await page.waitForLoadState('networkidle');
+    await page.waitForSelector('.board-card');
+  }
+
+  test('Case 1: No marks - displays only mark count without date', async ({ page }) => {
+    await setupBoardWithMarks(page, 'Empty Board', []);
+    const subtitle = page.locator('ion-card', { hasText: 'Empty Board' }).locator('ion-card-subtitle');
+    await expect(subtitle).toHaveText('0 marks');
+  });
+
+  test('Case 2: Latest mark is today - displays "Today"', async ({ page }) => {
+    await setupBoardWithMarks(page, 'Today Board', [getOffsetDateString(0)]);
+    const subtitle = page.locator('ion-card', { hasText: 'Today Board' }).locator('ion-card-subtitle');
+    await expect(subtitle).toHaveText('1 marks · Today');
+  });
+
+  test('Case 3: Latest mark is yesterday - displays "Yesterday"', async ({ page }) => {
+    await setupBoardWithMarks(page, 'Yesterday Board', [getOffsetDateString(-1)]);
+    const subtitle = page.locator('ion-card', { hasText: 'Yesterday Board' }).locator('ion-card-subtitle');
+    await expect(subtitle).toHaveText('1 marks · Yesterday');
+  });
+
+  test('Case 4: Latest mark is 3 days ago - displays relative days', async ({ page }) => {
+    await setupBoardWithMarks(page, 'Three Days Board', [getOffsetDateString(-3)]);
+    const subtitle = page.locator('ion-card', { hasText: 'Three Days Board' }).locator('ion-card-subtitle');
+    await expect(subtitle).toHaveText('1 marks · 3 days ago');
+  });
+
+  test('Case 5: Latest mark is older than 6 days - displays localized date', async ({ page }) => {
+    const tenDaysAgoStr = getOffsetDateString(-10);
+    await setupBoardWithMarks(page, 'Ten Days Board', [tenDaysAgoStr]);
+
+    const expectedDateStr = await page.evaluate((dateStr) => {
+        const [y, m, d] = dateStr.split('-').map(Number);
+        return new Date(y, m - 1, d).toLocaleDateString();
+    }, tenDaysAgoStr);
+
+    const subtitle = page.locator('ion-card', { hasText: 'Ten Days Board' }).locator('ion-card-subtitle');
+    await expect(subtitle).toHaveText(`1 marks · ${expectedDateStr}`);
+  });
+
+  test('Case 6: Multiple marks on different dates - correctly identifies the most recent date', async ({ page }) => {
+    // Marks on 10 days ago, 5 days ago, and Yesterday
+    await setupBoardWithMarks(page, 'Multi Date Board', [
+      getOffsetDateString(-10),
+      getOffsetDateString(-5),
+      getOffsetDateString(-1)
+    ]);
+    const subtitle = page.locator('ion-card', { hasText: 'Multi Date Board' }).locator('ion-card-subtitle');
+    await expect(subtitle).toHaveText('3 marks · Yesterday');
+  });
+});

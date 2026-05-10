@@ -12,7 +12,7 @@ interface BoardCardProps {
   id: string;
   name: string;
   markCount: number;
-  lastUpdated: number;
+  lastMarkedDay?: number;
   recentMarks: Mark[];
   onClick: (id: string) => void;
 }
@@ -21,7 +21,7 @@ const BoardCard: React.FC<BoardCardProps> = ({
   id,
   name,
   markCount,
-  lastUpdated,
+  lastMarkedDay,
   recentMarks,
   onClick,
 }) => {
@@ -49,7 +49,7 @@ const BoardCard: React.FC<BoardCardProps> = ({
           <div className="board-card__info">
             <IonCardTitle>{name}</IonCardTitle>
             <IonCardSubtitle>
-              {markCount} marks · {formatDate(lastUpdated)}
+              {markCount} marks{lastMarkedDay ? ` · ${formatDate(lastMarkedDay)}` : ''}
             </IonCardSubtitle>
           </div>
           {recentMarks.length > 0 && (

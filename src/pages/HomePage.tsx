@@ -82,17 +82,28 @@ const HomePage: React.FC = () => {
                     </div>
                 ) : (
                     <div className="board-list">
-                        {sortedBoards.map((board) => (
-                            <BoardCard
-                                key={board.id}
-                                id={board.id}
-                                name={board.name}
-                                markCount={Object.keys(board.marks).length}
-                                lastUpdated={board.updatedAt}
-                                recentMarks={getRecentMarks(board.recentMarkIds)}
-                                onClick={handleSelectBoard}
-                            />
-                        ))}
+                        {sortedBoards.map((board) => {
+                            const markDates = Object.keys(board.marks);
+                            let lastMarkedDay: number | undefined;
+                            if (markDates.length > 0) {
+                                lastMarkedDay = Math.max(...markDates.map(dateStr => {
+                                    const [year, month, day] = dateStr.split('-').map(Number);
+                                    return new Date(year, month - 1, day).getTime();
+                                }));
+                            }
+
+                            return (
+                                <BoardCard
+                                    key={board.id}
+                                    id={board.id}
+                                    name={board.name}
+                                    markCount={markDates.length}
+                                    lastMarkedDay={lastMarkedDay}
+                                    recentMarks={getRecentMarks(board.recentMarkIds)}
+                                    onClick={handleSelectBoard}
+                                />
+                            );
+                        })}
                     </div>
                 )}
 

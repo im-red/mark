@@ -20,7 +20,6 @@ const isNative = Capacitor.isNativePlatform();
 async function initCapacitor() {
   if (isNative) {
     await StatusBar.setStyle({ style: Style.Light });
-    await StatusBar.setBackgroundColor({ color: '#3880ff' });
   }
 }
 
