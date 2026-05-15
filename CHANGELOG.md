@@ -1,3 +1,9 @@
+## [v1.4.0] - 2026-05-16
+
+### New Features
+
+- **Dark Mode Support** - Adapted the application to properly support dark mode themes using Ionic CSS variables.
+
 ## [v1.3.4] - 2026-05-10
 
 ### New Features
