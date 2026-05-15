@@ -196,7 +196,7 @@ const Calendar: React.FC<CalendarProps> = ({ markIds, comments, getMarkById, onD
                 <div
                   key={index}
                   className={`calendar-day ${dateInfo.isCurrentMonth ? 'current-month' : 'other-month'} ${isToday ? 'today' : ''} ${mark ? 'has-mark' : ''} ${isWeekend ? 'weekend' : ''} ${hasComment ? 'has-comment' : ''}`}
-                  style={mark ? { backgroundColor: mark.backgroundColor } : hasComment ? { backgroundColor: 'var(--surface)' } : undefined}
+                  style={mark ? { backgroundColor: mark.backgroundColor } : hasComment ? { backgroundColor: 'var(--calendar-surface)' } : undefined}
                   onClick={() => onDateClick(dateInfo.dateKey)}
                 >
                   <div className="day-header">

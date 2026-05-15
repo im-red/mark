@@ -1,5 +1,18 @@
 .calendar {
   width: 100%;
+  
+  /* Private calendar variables with fallbacks */
+  --calendar-bg: var(--ion-background-color);
+  --calendar-surface: var(--ion-item-background);
+  --calendar-comment-fold-bg: var(--ion-color-step-50);
+  --calendar-border: var(--ion-color-step-150);
+  --calendar-text-main: var(--ion-text-color);
+  --calendar-text-muted: var(--ion-color-medium);
+  --calendar-primary: var(--ion-color-primary);
+  --calendar-weekend-color: #e8888a;
+  --calendar-today-bg: rgba(var(--ion-color-primary-rgb, 56, 128, 255), 0.1);
+  --calendar-today-text: #ffffff;
+  --calendar-day-number-bg: var(--ion-background-color);
 }
 
 .calendar-header {
@@ -12,7 +25,7 @@
 .calendar-header .month-year {
   font-size: 1.1rem;
   font-weight: 600;
-  color: var(--text-main);
+  color: var(--calendar-text-main);
   --padding-start: 0.5rem;
   --padding-end: 0.5rem;
 }
@@ -38,12 +51,12 @@
   text-align: center;
   font-size: 0.7rem;
   font-weight: 500;
-  color: var(--text-muted);
+  color: var(--calendar-text-muted);
   padding: 0.25rem 0;
 }
 
 .weekday.weekend {
-  color: #e8888a;
+  color: var(--calendar-weekend-color);
 }
 
 .calendar-grid {
@@ -56,7 +69,7 @@
 
 .calendar-day {
   position: relative;
-  background: var(--background);
+  background: var(--calendar-bg);
   min-height: 56px;
   padding: 4px 2px;
   display: flex;
@@ -69,7 +82,7 @@
 }
 
 .calendar-day:active {
-  background: var(--surface);
+  background: var(--calendar-surface);
   transform: scale(0.95);
 }
 
@@ -83,8 +96,8 @@
 }
 
 .calendar-day.today {
-  background: #eef3ff;
-  border: 2px dashed var(--primary);
+  background: var(--calendar-today-bg);
+  border: 2px dashed var(--calendar-primary);
   border-radius: 14px;
 }
 
@@ -100,7 +113,7 @@
   font-size: 0.8rem;
   font-weight: 500;
   margin-bottom: 0.25rem;
-  color: var(--text-muted);
+  color: var(--calendar-text-muted);
 }
 
 .comment-fold {
@@ -111,7 +124,7 @@
   height: 0;
   border-style: solid;
   border-width: 0 12px 12px 0;
-  border-color: transparent var(--surface) transparent transparent;
+  border-color: transparent var(--calendar-comment-fold-bg) transparent transparent;
   border-radius: 0 12px 0 0;
 }
 
@@ -128,15 +141,15 @@
 }
 
 .calendar-day.current-month .day-number {
-  color: var(--text-main);
+  color: var(--calendar-text-main);
 }
 
 .calendar-day.current-month.weekend .day-number {
-  color: #e8888a;
+  color: var(--calendar-weekend-color);
 }
 
 .calendar-day.has-mark .day-number {
-  background: rgba(255, 255, 255, 0.85);
+  background: var(--calendar-day-number-bg);
   border-radius: 50%;
   width: 22px;
   height: 22px;
@@ -147,10 +160,10 @@
 }
 
 .calendar-day.current-month.today .day-number {
-  color: #ffffff;
+  color: var(--calendar-today-text);
   font-weight: 700;
   font-size: 0.75rem;
-  background: var(--primary);
+  background: var(--calendar-primary);
   border-radius: 50%;
   width: 24px;
   height: 24px;
@@ -162,6 +175,7 @@
 .day-mark {
   font-size: 1.4rem;
   line-height: 1;
+  color: var(--mark-text-color);
 }
 
 .year-grid {
@@ -171,7 +185,7 @@
 }
 
 .year-month {
-  background: var(--surface);
+  background: var(--calendar-surface);
   border-radius: 12px;
   padding: 0.5rem;
   cursor: pointer;
@@ -179,24 +193,24 @@
 }
 
 .year-month:active {
-  background: var(--border-color);
+  background: var(--calendar-border);
   transform: scale(0.97);
 }
 
 .year-month--current {
-  border: 1.5px solid var(--primary);
+  border: 1.5px solid var(--calendar-primary);
 }
 
 .year-month__name {
   font-size: 0.8rem;
   font-weight: 600;
-  color: var(--text-main);
+  color: var(--calendar-text-main);
   text-align: center;
   margin-bottom: 0.25rem;
 }
 
 .year-month__name--current {
-  color: var(--primary);
+  color: var(--calendar-primary);
 }
 
 .year-month__grid {
@@ -208,7 +222,7 @@
 .year-month__weekday {
   text-align: center;
   font-size: 0.5rem;
-  color: var(--text-muted);
+  color: var(--calendar-text-muted);
   line-height: 1;
   padding: 1px 0;
 }
@@ -230,25 +244,35 @@
 }
 
 .year-month__day--today {
-  background: var(--primary);
+  background: var(--calendar-primary);
   border: none;
   border-radius: 4px;
 }
 
 .year-month__day--today .year-month__day-num {
-  color: #ffffff;
+  color: var(--calendar-today-text);
   font-weight: 700;
 }
 
 .year-month__day-num {
   font-size: 0.5rem;
   line-height: 1;
-  color: var(--text-main);
+  color: var(--calendar-text-main);
 }
 
 .year-month__day--marked .year-month__day-num {
-  color: var(--text-main);
+  color: var(--calendar-text-main);
   font-weight: 600;
+}
+
+@media (prefers-color-scheme: dark) {
+  .calendar-day.has-mark {
+    filter: brightness(0.65) saturate(1.2);
+  }
+
+  .year-month__day--marked {
+    filter: brightness(0.65) saturate(1.2);
+  }
 }
 
 @media (max-width: 360px) {

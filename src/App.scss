@@ -5,8 +5,8 @@ body {
 
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  background-color: var(--surface);
-  color: var(--text-main);
+  background-color: var(--ion-color-step-50);
+  color: var(--ion-text-color);
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -14,7 +14,7 @@ body {
 
 .overlay__text {
   font-size: 1rem;
-  color: var(--text-muted);
+  color: var(--ion-color-medium);
   margin-bottom: 1rem;
   line-height: 1.5;
 }
@@ -27,7 +27,7 @@ body {
 
 .mark-grid__empty {
   font-size: 0.875rem;
-  color: var(--text-muted);
+  color: var(--ion-color-medium);
   grid-column: 1 / -1;
   text-align: center;
   padding: 1rem 0;
@@ -46,9 +46,9 @@ ion-list.edge-to-edge ion-item {
 }
 
 .action-sheet-container .action-sheet-button.action-sheet-destructive {
-  color: var(--error);
+  color: var(--ion-color-danger);
 }
 
 .action-sheet-container .action-sheet-button.action-sheet-cancel {
-  color: var(--text-secondary);
+  color: var(--ion-color-step-400);
 }

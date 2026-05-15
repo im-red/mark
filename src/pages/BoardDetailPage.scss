@@ -5,7 +5,7 @@
 .mark-stats__title {
   font-size: 0.75rem;
   font-weight: 600;
-  color: var(--text-muted);
+  color: var(--ion-color-medium);
   text-transform: uppercase;
   letter-spacing: 0.5px;
   margin-bottom: 0.75rem;
@@ -35,22 +35,28 @@
 .mark-stats__bar {
   height: 100%;
   border-radius: 8px;
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--ion-color-step-150);
   min-width: 4px;
   transition: width 0.3s ease;
+}
+
+@media (prefers-color-scheme: dark) {
+  .mark-stats__bar {
+    filter: brightness(0.65) saturate(1.2);
+  }
 }
 
 .mark-stats__count {
   font-size: 0.875rem;
   font-weight: 600;
-  color: var(--text-main);
+  color: var(--ion-text-color);
   min-width: 28px;
   text-align: right;
   flex-shrink: 0;
 }
 
 .export-capture-area {
-  background: var(--background);
+  background: var(--ion-background-color);
 }
 
 .export-capture-area__header {
@@ -70,7 +76,7 @@
 }
 
 .export-capture-area--exporting .calendar {
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--ion-color-step-150);
   border-radius: 8px;
 }
 
@@ -84,12 +90,12 @@
 }
 
 .export-capture-area--exporting .calendar-day.today {
-  background: var(--background);
+  background: var(--ion-background-color);
   border: none;
 }
 
 .export-capture-area--exporting .calendar-day.current-month.today .day-number {
-  color: var(--text-main);
+  color: var(--ion-text-color);
   background: none;
   border-radius: 0;
   width: auto;
@@ -100,7 +106,7 @@
 }
 
 .export-capture-area--exporting .calendar-day.current-month.today.has-mark .day-number {
-  color: var(--text-main);
+  color: var(--ion-text-color);
   background: rgba(255, 255, 255, 0.85);
   border-radius: 50%;
   width: 22px;
@@ -118,17 +124,65 @@
 }
 
 .export-capture-area--exporting .year-month__day--today .year-month__day-num {
-  color: var(--text-main);
+  color: var(--ion-text-color);
   font-weight: 600;
 }
 
 .export-capture-area__title {
   font-size: 1rem;
   font-weight: 600;
-  color: var(--text-main);
+  color: var(--ion-text-color);
 }
 
 .export-capture-area__subtitle {
   font-size: 0.875rem;
-  color: var(--text-muted);
+  color: var(--ion-color-medium);
+}
+
+.mark-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.mark-item {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem;
+  background: var(--ion-color-step-50);
+  border-radius: 12px;
+}
+
+.mark-item__emoji {
+  font-size: 1.5rem;
+  margin-right: 0.75rem;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+}
+
+.mark-item__content {
+  flex: 1;
+}
+
+.mark-item__name {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--ion-text-color);
+  margin-bottom: 0.125rem;
+}
+
+.mark-item__desc {
+  font-size: 0.8rem;
+  color: var(--ion-color-medium);
+}
+
+.mark-item__count {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--ion-text-color);
+  margin-left: 1rem;
 }
