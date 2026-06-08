@@ -7,6 +7,7 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
+    "test": "playwright test",
     "sync": "npx cap sync",
     "open:android": "npx cap open android",
     "go": "vite build && npx cap sync && npx cap open android"
@@ -26,6 +27,7 @@
     "@capacitor/status-bar": "^8.0.0",
     "@ionic/react": "^8.8.5",
     "@ionic/react-router": "^8.8.5",
+    "framer-motion": "^12.40.0",
     "html2canvas-pro": "^2.0.2",
     "ionicons": "^7.4.0",
     "react": "^19.0.0",

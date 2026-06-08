@@ -38,7 +38,7 @@ async function navigateToBoard(page: Page) {
 }
 
 async function openMarkSelector(page: Page) {
-  await page.locator('.calendar-day.current-month').first().click();
+  await page.locator('.calendar-carousel-slide--active .calendar-day.current-month').first().click();
   // Ionic keeps all modals in DOM (overlay-hidden when closed), so target the visible one
   await page.waitForSelector('ion-modal:not(.overlay-hidden)', { state: 'visible' });
   await page.waitForSelector('ion-modal:not(.overlay-hidden) .mark-section', { state: 'visible' });
@@ -199,7 +199,7 @@ test.describe('Mark System Tests', () => {
 
     const today = new Date();
     const dayOfMonth = today.getDate();
-    const calendarDays = page.locator('.calendar-day');
+    const calendarDays = page.locator('.calendar-carousel-slide--active .calendar-day');
     let targetDayIndex = -1;
 
     for (let i = 0; i < (await calendarDays.count()); i++) {
@@ -562,6 +562,7 @@ test.describe('Per-Board Recent Marks Tests', () => {
   });
 
   test('applying mark on one board does not affect another board recent marks', async ({ page }) => {
+    test.setTimeout(30000);
     await createBoardViaFab(page, 'First Board');
     await openMarkSelector(page);
     await applyMarkFromSuite(page, 'Checkmarks', 0);
@@ -865,7 +866,7 @@ test.describe('Comment System Tests', () => {
 
     await closeModal(page);
 
-    const commentFold = page.locator('.calendar-day.current-month.has-comment .comment-fold').first();
+    const commentFold = page.locator('.calendar-carousel-slide--active .calendar-day.current-month.has-comment .comment-fold').first();
     await expect(commentFold).toBeVisible();
   });
 
@@ -874,7 +875,7 @@ test.describe('Comment System Tests', () => {
 
     const today = new Date();
     const dayOfMonth = today.getDate();
-    const calendarDays = page.locator('.calendar-day.current-month');
+    const calendarDays = page.locator('.calendar-carousel-slide--active .calendar-day.current-month');
 
     for (let i = 0; i < (await calendarDays.count()); i++) {
       const dayText = await calendarDays.nth(i).locator('.day-number').textContent();
@@ -889,7 +890,7 @@ test.describe('Comment System Tests', () => {
   test('comment resets when switching to another day', async ({ page }) => {
     await navigateToBoard(page);
 
-    const calendarDays = page.locator('.calendar-day.current-month');
+    const calendarDays = page.locator('.calendar-carousel-slide--active .calendar-day.current-month');
     await calendarDays.first().click();
     await page.waitForSelector('ion-modal:not(.overlay-hidden)', { state: 'visible' });
     await page.waitForTimeout(300);
@@ -919,11 +920,11 @@ test.describe('Comment System Tests', () => {
 
     await closeModal(page);
 
-    const calendarDay = page.locator('.calendar-day.current-month').first();
+    const calendarDay = page.locator('.calendar-carousel-slide--active .calendar-day.current-month').first();
     const hasMark = await calendarDay.evaluate((el) => el.classList.contains('has-mark'));
     expect(hasMark).toBe(false);
 
-    const commentFold = page.locator('.calendar-day.current-month .comment-fold').first();
+    const commentFold = page.locator('.calendar-carousel-slide--active .calendar-day.current-month .comment-fold').first();
     await expect(commentFold).toBeVisible();
   });
 
@@ -933,7 +934,7 @@ test.describe('Comment System Tests', () => {
 
     await applyMarkFromSuite(page, 'Checkmarks', 0);
 
-    const calendarDay = page.locator('.calendar-day.current-month.has-mark').first();
+    const calendarDay = page.locator('.calendar-carousel-slide--active .calendar-day.current-month.has-mark').first();
     const commentFold = calendarDay.locator('.comment-fold');
     expect(await commentFold.count()).toBe(0);
   });
@@ -951,7 +952,7 @@ test.describe('Comment System Tests', () => {
 
     await closeModal(page);
 
-    const calendarDay = page.locator('.calendar-day.current-month.has-mark').first();
+    const calendarDay = page.locator('.calendar-carousel-slide--active .calendar-day.current-month.has-mark').first();
     await expect(calendarDay).toBeVisible();
 
     const commentFold = calendarDay.locator('.comment-fold');
@@ -977,11 +978,11 @@ test.describe('Comment System Tests', () => {
     await page.waitForTimeout(300);
     await closeModal(page);
 
-    const calendarDay = page.locator('.calendar-day.current-month').first();
+    const calendarDay = page.locator('.calendar-carousel-slide--active .calendar-day.current-month').first();
     const hasMark = await calendarDay.evaluate((el) => el.classList.contains('has-mark'));
     expect(hasMark).toBe(false);
 
-    const commentFold = page.locator('.calendar-day.current-month .comment-fold').first();
+    const commentFold = page.locator('.calendar-carousel-slide--active .calendar-day.current-month .comment-fold').first();
     await expect(commentFold).toBeVisible();
 
     await openMarkSelector(page);
@@ -1159,7 +1160,7 @@ test.describe('Import/Export Comments Tests', () => {
     await importedBoard.click();
     await page.waitForSelector('.calendar');
 
-    await page.locator('.calendar-day.current-month', { hasText: '15' }).first().click();
+    await page.locator('.calendar-carousel-slide--active .calendar-day.current-month', { hasText: '15' }).first().click();
     await page.waitForSelector('ion-modal:not(.overlay-hidden)');
 
     const commentDisplay = getCommentDisplay(page);

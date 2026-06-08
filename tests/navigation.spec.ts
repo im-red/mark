@@ -331,7 +331,7 @@ test.describe('Navigation Tests', () => {
   test('mark selector modal opens when calendar date is clicked', async ({ page }) => {
     await createBoard(page, 'Calendar Test');
 
-    const calendarDay = page.locator('.calendar-day.current-month').first();
+    const calendarDay = page.locator('.calendar-carousel-slide--active .calendar-day.current-month').first();
     await calendarDay.click();
     await page.waitForTimeout(800);
 

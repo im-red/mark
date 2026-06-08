@@ -280,3 +280,23 @@
     grid-template-columns: repeat(2, 1fr);
   }
 }
+
+.calendar-carousel {
+  overflow: hidden;
+  width: 100%;
+  padding-bottom: 0.5rem;
+}
+
+.calendar-carousel-inner {
+  display: flex;
+  width: 300%;
+  margin-left: -100%;
+  align-items: flex-start;
+  will-change: transform;
+}
+
+.calendar-carousel-slide {
+  flex: 0 0 33.333333%;
+  width: 33.333333%;
+}
+
