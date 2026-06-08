@@ -1,6 +1,6 @@
 {
   "name": "mark",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "description": "A Capacitor Android application",
   "main": "index.js",
   "scripts": {

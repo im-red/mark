@@ -1,3 +1,9 @@
+## [v1.4.1] - 2026-06-08
+
+### New Features
+
+- **Swipe Navigation** - Support switching months and years by swiping in the calendar view.
+
 ## [v1.4.0] - 2026-05-16
 
 ### New Features
