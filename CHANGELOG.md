@@ -1,3 +1,9 @@
+## [v1.4.2] - 2026-06-09
+
+### Improvements
+
+- **Icons** - Update icons
+
 ## [v1.4.1] - 2026-06-08
 
 ### New Features
