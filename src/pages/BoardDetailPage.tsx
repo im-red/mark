@@ -16,7 +16,7 @@ import {
     IonList,
     IonIcon,
 } from '@ionic/react';
-import { ellipsisVertical } from 'ionicons/icons';
+import { ellipsisVertical, pencilOutline, imageOutline, trashOutline, closeOutline } from 'ionicons/icons';
 import Calendar from '../components/Calendar';
 import MarkSelector from '../components/MarkSelector';
 import { Mark } from '../models';
@@ -254,6 +254,7 @@ const BoardDetailPage: React.FC<BoardDetailPageProps> = ({ match }) => {
                 buttons={[
                     {
                         text: 'Rename',
+                        icon: pencilOutline,
                         handler: () => {
                             setNewName(board.name);
                             setShowRenameModal(true);
@@ -261,11 +262,13 @@ const BoardDetailPage: React.FC<BoardDetailPageProps> = ({ match }) => {
                     },
                     {
                         text: 'Export as Image',
+                        icon: imageOutline,
                         handler: handleExportImage,
                     },
                     {
                         text: 'Delete',
                         role: 'destructive',
+                        icon: trashOutline,
                         handler: () => {
                             setShowDeleteAlert(true);
                         },
@@ -273,6 +276,7 @@ const BoardDetailPage: React.FC<BoardDetailPageProps> = ({ match }) => {
                     {
                         text: 'Cancel',
                         role: 'cancel',
+                        icon: closeOutline,
                     },
                 ]}
             />

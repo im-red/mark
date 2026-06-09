@@ -12,7 +12,7 @@ import {
   IonMenuToggle,
   IonFooter,
 } from '@ionic/react';
-import { colorPalette, cloudUpload, cloudDownload, settings } from 'ionicons/icons';
+import { colorPaletteOutline, cloudUploadOutline, cloudDownloadOutline, settingsOutline } from 'ionicons/icons';
 import useAppVersion from '../hooks/useAppVersion';
 
 const SideMenu: React.FC = () => {
@@ -29,25 +29,25 @@ const SideMenu: React.FC = () => {
         <IonList lines="full">
           <IonMenuToggle autoHide={false}>
             <IonItem button routerLink="/mark-management" routerDirection="none">
-              <IonIcon icon={colorPalette} slot="start" />
+              <IonIcon icon={colorPaletteOutline} slot="start" />
               <IonLabel>Manage Marks</IonLabel>
             </IonItem>
           </IonMenuToggle>
           <IonMenuToggle autoHide={false}>
             <IonItem button routerLink="/export" routerDirection="none">
-              <IonIcon icon={cloudUpload} slot="start" />
+              <IonIcon icon={cloudUploadOutline} slot="start" />
               <IonLabel>Export Data</IonLabel>
             </IonItem>
           </IonMenuToggle>
           <IonMenuToggle autoHide={false}>
             <IonItem button routerLink="/import" routerDirection="none">
-              <IonIcon icon={cloudDownload} slot="start" />
+              <IonIcon icon={cloudDownloadOutline} slot="start" />
               <IonLabel>Import Data</IonLabel>
             </IonItem>
           </IonMenuToggle>
           <IonMenuToggle autoHide={false}>
             <IonItem button routerLink="/settings" routerDirection="none">
-              <IonIcon icon={settings} slot="start" />
+              <IonIcon icon={settingsOutline} slot="start" />
               <IonLabel>Settings</IonLabel>
             </IonItem>
           </IonMenuToggle>
